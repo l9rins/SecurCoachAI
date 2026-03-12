@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Poppins:wght@400;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    --bg-base: #222831;
+    --bg-surface: #2b313a;
+    --bg-elevated: #393E46;
+    --bg-hover: #434952;
+    --border: rgba(223, 208, 184, 0.12);
+    --accent: #948979;
+    --accent-soft: rgba(148, 137, 121, 0.14);
+    --accent-glow: rgba(148, 137, 121, 0.2);
+    --text-1: #DFD0B8;
+    --text-2: rgba(223, 208, 184, 0.72);
+    --text-3: rgba(223, 208, 184, 0.42);
+    --radius: 12px;
+}
+
+.stApp {
+    background: linear-gradient(180deg, #222831 0%, #2a3038 45%, #393E46 100%);
+    background-color: var(--bg-base);
+    color: var(--text-1);
+    font-family: 'Inter', sans-serif;
+}
+
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #2a3038 0%, #222831 100%);
+    border-right: 1px solid var(--border);
+}
+
+div[data-testid="stTextInput"] input {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius) !important;
+    color: var(--text-1) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.93rem !important;
+    padding: 12px 14px !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+}
+
+div[data-testid="stTextInput"] input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-glow) !important;
+    outline: none !important;
+}
+
+div[data-testid="stTextInput"] input::placeholder {
+    color: var(--text-3) !important;
+}
+
+div[data-testid="stTextInput"] label,
+div[data-testid="stCheckbox"] label {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    color: var(--text-2) !important;
+}
+
+div[data-testid="stButton"] > button {
+    background: var(--accent) !important;
+    border: none !important;
+    color: var(--deep, #222831) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.93rem !important;
+    font-weight: 500 !important;
+    border-radius: var(--radius) !important;
+    padding: 12px !important;
+    width: 100% !important;
+    transition: opacity 0.15s, box-shadow 0.15s !important;
+    letter-spacing: 0.1px !important;
+}
+
+div[data-testid="stButton"] > button:hover {
+    opacity: 0.88 !important;
+    box-shadow: 0 4px 20px var(--accent-glow) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+}
+
+code,
+pre,
+kbd,
+samp {
+    font-family: 'JetBrains Mono', monospace !important;
+}
