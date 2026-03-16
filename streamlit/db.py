@@ -153,7 +153,6 @@ def save_message(
         "conversation_id": conversation_id,
         "sender":          "user" if role == "user" else "ai",
         "message":         content,
-        "created_at":      datetime.now().isoformat(),
     }
     _req(
         "POST",

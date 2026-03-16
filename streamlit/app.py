@@ -278,7 +278,6 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
     with target.container():
         target.markdown(msg["content"])
 
-
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
     lines = [f"# SecurCoach AI — {domain} conversation\n"]
@@ -390,7 +389,7 @@ with header_col:
 with chip_col:
     st.markdown(
         f"<div style='padding-top:18px;text-align:right'>"
-        f"<span class='domain-chip'>{st.session_state.selected_domain}</span>"
+        f"<span class='domain-chip'>{html_lib.escape(st.session_state.selected_domain)}</span>"
         f"</div>",
         unsafe_allow_html=True,
     )
@@ -398,7 +397,7 @@ with chip_col:
 # DB error banner
 db_err = db.get_error()
 if db_err:
-    st.markdown(f'<div class="err-banner">⚠️ Database error: {db_err}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="err-banner">⚠️ Database error: {html_lib.escape(db_err)}</div>', unsafe_allow_html=True)
     db.clear_error()
 
 st.divider()
