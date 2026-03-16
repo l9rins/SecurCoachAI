@@ -41,16 +41,29 @@ def _req(
         headers.update(extra_headers)
 
     try:
-        resp = requests.request(
-            method, url, headers=headers, json=payload, timeout=20
-        )
-        resp.raise_for_status()
-        return resp.json() if resp.text.strip() else None
-    except requests.HTTPError as exc:
-        _set_error(f"Supabase HTTP {exc.response.status_code}: {exc.response.text[:200]}")
-        return None
-    except Exception as exc:
-        _set_error(str(exc))
+        for attempt in range(2):
+            try:
+                resp = requests.request(
+                    method, url, headers=headers, json=payload, timeout=20
+                )
+                resp.raise_for_status()
+                return resp.json() if resp.text.strip() else None
+            except requests.HTTPError as exc:
+                if attempt == 1:
+                    _set_error(f"Supabase HTTP {exc.response.status_code}: {exc.response.text[:200]}")
+                if exc.response.status_code >= 500:
+                    continue  # Retry on server errors
+                return None
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                if attempt == 1:
+                    _set_error(f"Supabase connection error: {str(exc)}")
+                continue  # Retry on connection issues
+            except Exception as exc:
+                if attempt == 1:
+                    _set_error(str(exc))
+                return None
+    except Exception as fatal_exc:
+        _set_error(f"Fatal database error: {str(fatal_exc)}")
         return None
 
 
@@ -117,11 +130,15 @@ def load_messages_for_conversation(user_id: str, conversation_id: str) -> list[d
         f"select=sender,message,created_at"
         f"&user_id=eq.{quote(user_id, safe='')}"
         f"&conversation_id=eq.{quote(conversation_id, safe='')}"
-        f"&order=created_at.asc"
+        f"&order=created_at.desc"   # newest first
+        f"&limit=100"               # last 100 messages
     )
     rows = _req("GET", config.chat_history_table(), query=query)
     if not isinstance(rows, list):
         return []
+
+    # Then reverse in Python so they display oldest→newest
+    rows = list(reversed(rows))
 
     messages: list[dict] = []
     for row in rows:

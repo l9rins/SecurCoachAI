@@ -2,8 +2,8 @@
 app.py — SecurCoach AI Streamlit dashboard.
 """
 from __future__ import annotations
-from datetime import datetime
-
+from datetime import datetime, date, timedelta
+import time
 import streamlit as st
 
 # ── Validate config first ─────────────────────────────────────────────────────
@@ -237,10 +237,12 @@ def _init_state() -> None:
             st.session_state.conversation_loaded = True
 
 
-def _refresh_conversations() -> None:
-    user_id = auth.get_user_email()
-    if user_id:
-        st.session_state.conversation_summaries = db.load_conversation_summaries(user_id)
+def _refresh_conversations(force: bool = False) -> None:
+    if force or not st.session_state.get("conversations_loaded"):
+        user_id = auth.get_user_email()
+        if user_id:
+            st.session_state.conversation_summaries = db.load_conversation_summaries(user_id)
+            st.session_state.conversations_loaded = True
 
 
 def _new_conversation() -> None:
@@ -260,7 +262,6 @@ def _select_conversation(cid: str) -> None:
 
 def _rate_limited() -> bool:
     """Enforce a 2-second cooldown between messages."""
-    import time
     now = time.time()
     last = st.session_state.get("last_msg_time", 0.0)
     if now - last < 2.0:
@@ -269,19 +270,38 @@ def _rate_limited() -> bool:
     return False
 
 
+def _group_conversations(summaries):
+    today     = date.today()
+    yesterday = today - timedelta(days=1)
+    week_ago  = today - timedelta(days=7)
+    groups    = {"Today": [], "Yesterday": [], "This week": [], "Older": []}
+    for s in summaries:
+        try:
+            d = date.fromisoformat(s["created_at"][:10])
+        except Exception:
+            d = date.min
+        if d == today:       groups["Today"].append(s)
+        elif d == yesterday: groups["Yesterday"].append(s)
+        elif d >= week_ago:  groups["This week"].append(s)
+        else:                groups["Older"].append(s)
+    return {k: v for k, v in groups.items() if v}
+
+
 # ── Rendering helpers ─────────────────────────────────────────────────────────
 
 def _render_message(msg: dict) -> None:
-    role    = msg["role"]
-    content = msg["content"]
-    ts      = msg.get("timestamp", "")
-    cls     = "msg-user" if role == "user" else "msg-ai"
-    label   = "You" if role == "user" else "🛡️ SecurCoach"
-    meta    = f'<div class="msg-meta">{label} · {ts}</div>' if ts else f'<div class="msg-meta">{label}</div>'
+    role  = msg["role"]
+    ts    = msg.get("timestamp", "")
+    label = "You" if role == "user" else "🛡️ SecurCoach"
+    cls   = "msg-user" if role == "user" else "msg-ai"
+    # Render the header
     st.markdown(
-        f'<div class="{cls}">{meta}{content}</div>',
+        f'<div class="{cls}"><div class="msg-meta">{label} · {ts}</div></div>',
         unsafe_allow_html=True,
     )
+    # Let Streamlit render markdown properly inside a container
+    with st.container():
+        st.markdown(msg["content"])
 
 
 def _export_markdown() -> str:
@@ -320,6 +340,11 @@ with st.sidebar:
         label_visibility="collapsed",
     )
     if new_domain != st.session_state.selected_domain:
+        if st.session_state.messages:
+            st.warning(
+                f"Switching domain to **{new_domain}** will change the AI's context. "
+                "Start a new conversation for the best results."
+            )
         st.session_state.selected_domain = new_domain
 
     st.divider()
@@ -337,23 +362,24 @@ with st.sidebar:
     current_cid = st.session_state.current_conversation_id
 
     if summaries:
-        st.markdown("<small style='color:var(--text3)'>Recent conversations</small>", unsafe_allow_html=True)
-        for s in summaries[:30]:
-            cid   = s["conversation_id"]
-            title = s["title"]
-            active = "active" if cid == current_cid else ""
-            col1, col2 = st.columns([4, 1])
-            with col1:
-                if st.button(title, key=f"conv_{cid}", use_container_width=True):
-                    _select_conversation(cid)
-                    st.rerun()
-            with col2:
-                if st.button("🗑", key=f"del_{cid}"):
-                    db.delete_conversation(user_email, cid)
-                    if cid == current_cid:
-                        _new_conversation()
-                    _refresh_conversations()
-                    st.rerun()
+        grouped = _group_conversations(summaries[:30])
+        for group_name, items in grouped.items():
+            st.markdown(f"<small style='color:var(--text3)'>{group_name}</small>", unsafe_allow_html=True)
+            for s in items:
+                cid   = s["conversation_id"]
+                title = s["title"]
+                col1, col2 = st.columns([4, 1])
+                with col1:
+                    if st.button(title, key=f"conv_{cid}", use_container_width=True):
+                        _select_conversation(cid)
+                        st.rerun()
+                with col2:
+                    if st.button("🗑", key=f"del_{cid}"):
+                        db.delete_conversation(user_email, cid)
+                        if cid == current_cid:
+                            _new_conversation()
+                        _refresh_conversations(force=True)
+                        st.rerun()
     else:
         st.markdown("<small style='color:var(--text3)'>No conversations yet.</small>", unsafe_allow_html=True)
 
@@ -370,10 +396,13 @@ with st.sidebar:
 
     # Export
     if st.session_state.messages:
+        title_slug = st.session_state.get("current_conv_title", "conversation")
+        title_slug = "".join(c if c.isalnum() else "_" for c in title_slug)[:30]
+        filename   = f"securcoach_{title_slug}_{datetime.now().strftime('%Y%m%d')}.md"
         st.download_button(
             "⬇ Export conversation",
             data=_export_markdown(),
-            file_name="securcoach_conversation.md",
+            file_name=filename,
             mime="text/markdown",
             use_container_width=True,
         )
@@ -478,12 +507,21 @@ if prompt:
             )
 
         # Final render without cursor
-        ai_placeholder.markdown(
-            f'<div class="msg-ai">'
-            f'<div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>'
-            f'{full_response}</div>',
-            unsafe_allow_html=True,
-        )
+        if not full_response.strip():
+            full_response = "⚠️ No response received. Gemini may be rate-limited — please try again."
+            ai_placeholder.markdown(
+                f'<div class="err-banner">{full_response}</div>',
+                unsafe_allow_html=True,
+            )
+        else:
+            ai_placeholder.markdown(
+                f'<div class="msg-ai">'
+                f'<div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            with ai_placeholder.container():
+                st.markdown(full_response)
 
     except Exception as exc:
         full_response = f"⚠️ Error: {exc}"
