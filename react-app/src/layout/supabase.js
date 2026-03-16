@@ -75,13 +75,15 @@ export async function signUpUser({ name, username, email, password }) {
   if (error) throw new Error(error.message);
 
   const user = data.user;
-  if (user) {
+  if (user && data.session) {
+    // Only attempt profile upsert if we have an active session (i.e. email
+    // confirmation is disabled). When confirmation IS required, data.session
+    // is null and the anon key would be denied by RLS — so we skip silently.
+    // signInUser will heal the missing profile row on first login.
     try {
       await upsertProfile(user.id, normalizedEmail, name, username);
     } catch (profileErr) {
-      console.warn(
-        `Account created, but profile save deferred due to RLS/email confirmation: ${profileErr.message}`
-      );
+      console.warn("Profile upsert skipped (expected when email confirmation is on):", profileErr.message);
     }
   }
 
