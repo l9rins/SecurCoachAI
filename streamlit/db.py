@@ -3,6 +3,7 @@ db.py — Supabase REST helpers for chat history.
 All errors are surfaced via st.session_state["db_error"] and logged.
 """
 from __future__ import annotations
+import html
 from datetime import datetime
 from urllib.parse import quote
 from uuid import uuid4
@@ -64,7 +65,6 @@ def _req(
     return None
 
 
-
 def _set_error(msg: str) -> None:
     st.session_state["db_error"] = msg
 
@@ -91,15 +91,12 @@ def load_conversation_summaries(user_id: str) -> list[dict]:
         return []
 
     seen: set[str] = set()
-    counts: dict[str, int] = {}
     titles: dict[str, str] = {}
 
     for row in rows:
         cid = str(row.get("conversation_id", "")).strip()
-        if cid:
-            counts[cid] = counts.get(cid, 0) + 1
-            if cid not in titles and row.get("title"):
-                titles[cid] = str(row["title"])
+        if cid and cid not in titles and row.get("title"):
+            titles[cid] = str(row["title"])
 
     summaries: list[dict] = []
     for row in rows:
@@ -117,7 +114,6 @@ def load_conversation_summaries(user_id: str) -> list[dict]:
                 "conversation_id": cid,
                 "title": title,
                 "created_at": str(row.get("created_at", "")).strip(),
-                "message_count": counts.get(cid, 0),
             }
         )
     return summaries
@@ -156,7 +152,6 @@ def save_message(
     conversation_id: str,
     role: str,
     content: str,
-    title: str | None = None,
 ) -> None:
     payload: dict = {
         "user_id":         user_id,
@@ -165,8 +160,6 @@ def save_message(
         "message":         content,
         "created_at":      datetime.now().isoformat(),
     }
-    if title:
-        payload["title"] = title
     _req(
         "POST",
         config.chat_history_table(),

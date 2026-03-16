@@ -45,7 +45,6 @@ st.markdown(
     --text2:    rgba(232,223,208,.65);
     --text3:    rgba(232,223,208,.35);
     --danger:   #e07070;
-    --success:  #7eb8a0;
     --radius:   10px;
 }
 
@@ -135,9 +134,6 @@ div[data-testid="stSelectbox"] > div > div {
     background: rgba(201,169,110,.08);
     font-family: 'JetBrains Mono', monospace;
 }
-
-
-/* ── Error banner ── */
 
 /* ── Error banner ── */
 .err-banner {
@@ -238,7 +234,6 @@ def _select_conversation(cid: str) -> None:
 
 
 def _rate_limited() -> bool:
-    """Enforce a 2-second cooldown between messages."""
     now = time.time()
     last = st.session_state.get("last_msg_time", 0.0)
     if now - last < 2.0:
@@ -265,8 +260,6 @@ def _group_conversations(summaries: list[dict]) -> dict[str, list[dict]]:
 
 
 # ── Rendering helpers ─────────────────────────────────────────────────────────
-
-import html as html_lib
 
 def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | None = None) -> None:
     role  = msg["role"]

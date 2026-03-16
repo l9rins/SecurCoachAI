@@ -2,6 +2,7 @@
 auth.py — JWT verification via PyJWT only. No insecure fallbacks.
 """
 from __future__ import annotations
+import html
 import streamlit as st
 
 try:
@@ -75,8 +76,6 @@ def apply_query_auth() -> None:
 def get_user_email() -> str:
     return st.session_state.get("auth_user_email", "").strip().lower()
 
-
-import html
 
 def require_auth() -> bool:
     """Returns True if authenticated, False otherwise (and shows login prompt)."""
