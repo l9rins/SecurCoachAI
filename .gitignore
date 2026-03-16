@@ -1,2 +1,19 @@
-.streamlit/secrets.toml
+# Python
 __pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+
+# Streamlit secrets (real values — never commit)
+.streamlit/secrets.toml
+
+# React
+react-app/node_modules/
+react-app/build/
+react-app/.env
+
+# OS
+.DS_Store
+Thumbs.db

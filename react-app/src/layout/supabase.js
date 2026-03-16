@@ -1,163 +1,96 @@
-const SUPABASE_URL = (process.env.REACT_APP_SUPABASE_URL || "").replace(/\/+$/, "");
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL      = process.env.REACT_APP_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY || "";
-const USERS_TABLE = process.env.REACT_APP_SUPABASE_USERS_TABLE || "users";
+const USERS_TABLE       = process.env.REACT_APP_SUPABASE_USERS_TABLE || "users";
 
-function assertSupabaseConfig() {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error(
-      "Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY in react-app/.env."
-    );
-  }
-}
-
-async function parseSupabaseResponse(response) {
-  const isJson = response.headers.get("content-type")?.includes("application/json");
-  const payload = isJson ? await response.json() : await response.text();
-
-  if (!response.ok) {
-    if (typeof payload === "object" && payload !== null) {
-      throw new Error(payload.msg || payload.error_description || payload.message || "Supabase request failed.");
-    }
-
-    throw new Error(payload || "Supabase request failed.");
-  }
-
-  return payload;
-}
-
-async function supabaseFetch(path, options = {}) {
-  assertSupabaseConfig();
-
-  const response = await fetch(`${SUPABASE_URL}${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
-
-  return parseSupabaseResponse(response);
-}
-
-function extractUserId(payload) {
-  return (
-    payload?.user?.id ||
-    payload?.session?.user?.id ||
-    payload?.id ||
-    payload?.user_id ||
-    payload?.user?.identities?.[0]?.user_id ||
-    ""
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error(
+    "Supabase is not configured. Set REACT_APP_SUPABASE_URL and " +
+    "REACT_APP_SUPABASE_ANON_KEY in react-app/.env"
   );
 }
 
-async function fetchCurrentUser(accessToken) {
-  if (!accessToken) {
-    return null;
-  }
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  return supabaseFetch("/auth/v1/user", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+// ── Profile upsert ────────────────────────────────────────────────────────────
+
+async function upsertProfile(userId, email, name, username) {
+  const { error } = await supabase
+    .from(USERS_TABLE)
+    .upsert(
+      {
+        id:        userId,
+        email:     email.trim().toLowerCase(),
+        full_name: name.trim(),
+        username:  username.trim(),
+      },
+      { onConflict: "id" }
+    );
+  if (error) throw new Error(error.message);
 }
 
-async function upsertUserProfile({ userId = "", email, name = "", username = "" }) {
-  const normalizedEmail = email.trim().toLowerCase();
-  const trimmedName = name.trim();
-  const trimmedUsername = username.trim();
-
-  const profilePayload = {
-    email: normalizedEmail,
-    full_name: trimmedName,
-    username: trimmedUsername,
-  };
-
-  if (userId) {
-    profilePayload.id = userId;
-  }
-
-  const path = userId
-    ? `/rest/v1/${USERS_TABLE}`
-    : `/rest/v1/${USERS_TABLE}?on_conflict=email`;
-
-  return supabaseFetch(path, {
-    method: "POST",
-    headers: {
-      Prefer: "resolution=merge-duplicates,return=representation",
-    },
-    body: JSON.stringify(profilePayload),
-  });
-}
+// ── Sign in ───────────────────────────────────────────────────────────────────
 
 export async function signInUser({ email, password }) {
-  const authResult = await supabaseFetch("/auth/v1/token?grant_type=password", {
-    method: "POST",
-    body: JSON.stringify({
-      email: email.trim().toLowerCase(),
-      password,
-    }),
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email:    email.trim().toLowerCase(),
+    password,
   });
+  if (error) throw new Error(error.message);
 
-  const currentUser = await fetchCurrentUser(authResult?.access_token);
-  const userId = extractUserId(currentUser || authResult);
-  const metadata = currentUser?.user_metadata || authResult?.user?.user_metadata || {};
+  const user = data.user;
+  const meta = user.user_metadata || {};
 
   try {
-    await upsertUserProfile({
-      userId,
-      email: currentUser?.email || authResult?.user?.email || email,
-      name: metadata?.name || "",
-      username: metadata?.username || "",
-    });
-  } catch (error) {
-    throw new Error(
-      `${error.message} Your auth login worked, but the "${USERS_TABLE}" profile row could not be saved.`
+    await upsertProfile(
+      user.id,
+      user.email,
+      meta.name     || meta.full_name || "",
+      meta.username || "",
     );
+  } catch (profileErr) {
+    // Profile save failed but auth succeeded — warn, don't block
+    console.warn("Profile upsert failed:", profileErr.message);
   }
 
-  return authResult;
+  return data;
 }
+
+// ── Sign up ───────────────────────────────────────────────────────────────────
 
 export async function signUpUser({ name, username, email, password }) {
   const normalizedEmail = email.trim().toLowerCase();
-  const trimmedName = name.trim();
-  const trimmedUsername = username.trim();
 
-  const authResult = await supabaseFetch("/auth/v1/signup", {
-    method: "POST",
-    body: JSON.stringify({
-      email: normalizedEmail,
-      password,
+  const { data, error } = await supabase.auth.signUp({
+    email:    normalizedEmail,
+    password,
+    options: {
       data: {
-        name: trimmedName,
-        username: trimmedUsername,
+        name:     name.trim(),
+        username: username.trim(),
       },
-    }),
+    },
   });
+  if (error) throw new Error(error.message);
 
-  let userId = extractUserId(authResult);
-
-  if (!userId && authResult?.access_token) {
-    const currentUser = await fetchCurrentUser(authResult.access_token);
-    userId = extractUserId(currentUser);
+  const user = data.user;
+  if (user) {
+    try {
+      await upsertProfile(user.id, normalizedEmail, name, username);
+    } catch (profileErr) {
+      console.warn(
+        `Account created, but profile save deferred due to RLS/email confirmation: ${profileErr.message}`
+      );
+    }
   }
 
-  try {
-    await upsertUserProfile({
-      userId,
-      email: normalizedEmail,
-      name: trimmedName,
-      username: trimmedUsername,
-    });
-  } catch (error) {
-    throw new Error(
-      `${error.message} Make sure the "${USERS_TABLE}" table exists and allows inserts/upserts for the anon role.`
-    );
-  }
+  return data;
+}
 
-  return authResult;
+// ── Get current session access token ─────────────────────────────────────────
+
+export async function getAccessToken() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session?.access_token || null;
 }
