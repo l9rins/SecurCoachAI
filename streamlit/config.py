@@ -40,7 +40,10 @@ def gemini_api_key() -> str:
     return _get("GEMINI_API_KEY")
 
 def supabase_url() -> str:
-    return _get("SUPABASE_URL").rstrip("/")
+    url = _get("SUPABASE_URL").rstrip("/")
+    if url and not url.startswith("https://"):
+        raise RuntimeError("SUPABASE_URL must start with https://")
+    return url
 
 def supabase_key() -> str:
     return _get("SUPABASE_KEY")

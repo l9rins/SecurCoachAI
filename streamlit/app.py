@@ -4,6 +4,7 @@ app.py — SecurCoach AI Streamlit dashboard.
 from __future__ import annotations
 from datetime import datetime, date, timedelta
 import time
+import html as html_lib
 import streamlit as st
 
 # ── Validate config first ─────────────────────────────────────────────────────
@@ -135,21 +136,8 @@ div[data-testid="stSelectbox"] > div > div {
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* ── Suggestion buttons ── */
-.suggestion-btn {
-    display: block; width: 100%;
-    padding: 8px 12px;
-    background: var(--elevated);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text2);
-    font-size: .82rem;
-    cursor: pointer;
-    text-align: left;
-    margin-bottom: 6px;
-    transition: all .15s;
-}
-.suggestion-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+/* ── Error banner ── */
 
 /* ── Error banner ── */
 .err-banner {
@@ -295,7 +283,8 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
     )
     # Let Streamlit render markdown properly inside a container
     with target.container():
-        st.markdown(msg["content"])
+        target.markdown(msg["content"])
+
 
 
 def _export_markdown() -> str:
@@ -322,7 +311,7 @@ user_email = auth.get_user_email()
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## 🛡️ SecurCoach AI")
-    st.markdown(f"<small style='color:var(--text3)'>{user_email}</small>", unsafe_allow_html=True)
+    st.markdown(f"<small style='color:var(--text3)'>{html_lib.escape(user_email)}</small>", unsafe_allow_html=True)
     st.divider()
 
     # Domain selector
@@ -346,7 +335,7 @@ with st.sidebar:
     # New conversation
     if st.button("＋  New conversation", use_container_width=True):
         _new_conversation()
-        _refresh_conversations()
+        _refresh_conversations(force=True)
         st.rerun()
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
@@ -404,7 +393,7 @@ with st.sidebar:
 # ── Main area ─────────────────────────────────────────────────────────────────
 header_col, chip_col = st.columns([6, 2])
 with header_col:
-    st.markdown(f"# SecurCoach AI")
+    st.markdown("# SecurCoach AI")
 with chip_col:
     st.markdown(
         f"<div style='padding-top:18px;text-align:right'>"
@@ -539,7 +528,7 @@ if prompt:
         )
 
         # Generate AI title on first exchange
-        if not st.session_state.conv_title_set and len(st.session_state.messages) == 2:
+        if not st.session_state.conv_title_set and len(st.session_state.messages) <= 2:
             title = chat.generate_title(prompt)
             db.update_conversation_title(
                 user_email, st.session_state.current_conversation_id, title

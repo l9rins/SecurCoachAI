@@ -114,9 +114,10 @@ def _get_client() -> genai.GenerativeModel:
 
 
 def _build_history(messages: list[dict]) -> list[dict]:
-    """Convert our internal message format to Gemini history format."""
+    """Convert our internal message format to Gemini history format (last 20 msgs)."""
     history: list[dict] = []
-    for msg in messages[:-1]:  # exclude last — that's the current prompt
+    # Only send last 20 messages as context — enough for coherence, avoids token bloat
+    for msg in messages[-21:-1]:
         role = "user" if msg["role"] == "user" else "model"
         history.append({"role": role, "parts": [msg["content"]]})
     return history

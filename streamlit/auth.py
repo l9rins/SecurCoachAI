@@ -76,16 +76,19 @@ def get_user_email() -> str:
     return st.session_state.get("auth_user_email", "").strip().lower()
 
 
+import html
+
 def require_auth() -> bool:
     """Returns True if authenticated, False otherwise (and shows login prompt)."""
     if not st.session_state.get("is_authenticated"):
         react_url = config.react_app_url()
+        safe_url = html.escape(react_url)
         st.markdown(
             f"""
             <div style="text-align:center;padding:4rem 2rem;">
               <h2 style="color:#DFD0B8;">Access Denied</h2>
               <p style="color:#948979;">Please log in through the React frontend first.</p>
-              <a href="{react_url}" target="_self"
+              <a href="{safe_url}" target="_self"
                  style="display:inline-block;margin-top:1rem;padding:.75rem 2rem;
                         background:#948979;color:#222831;border-radius:8px;
                         font-weight:600;text-decoration:none;">
