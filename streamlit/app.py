@@ -151,23 +151,6 @@ div[data-testid="stSelectbox"] > div > div {
 }
 .suggestion-btn:hover { border-color: var(--accent2); color: var(--accent2); }
 
-/* ── Conversation list ── */
-.conv-item {
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: .82rem;
-    color: var(--text2);
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all .15s;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.conv-item:hover  { background: var(--elevated); border-color: var(--border); color: var(--text1); }
-.conv-item.active { background: rgba(201,169,110,.1); border-color: var(--accent); color: var(--accent); }
-
 /* ── Error banner ── */
 .err-banner {
     background: rgba(224,112,112,.12);
@@ -216,6 +199,7 @@ def _init_state() -> None:
     st.session_state.setdefault("selected_domain", chat.DOMAINS[0])
     st.session_state.setdefault("last_msg_time", 0.0)
     st.session_state.setdefault("conv_title_set", False)
+    st.session_state.setdefault("current_conv_title", "conversation")
 
     user_id = auth.get_user_email()
     if st.session_state.is_authenticated and user_id:
@@ -250,6 +234,7 @@ def _new_conversation() -> None:
     st.session_state.messages = []
     st.session_state.conversation_loaded = True
     st.session_state.conv_title_set = False
+    st.session_state.current_conv_title = "conversation"
 
 
 def _select_conversation(cid: str) -> None:
@@ -258,6 +243,10 @@ def _select_conversation(cid: str) -> None:
     st.session_state.messages = db.load_messages_for_conversation(user_id, cid)
     st.session_state.conversation_loaded = True
     st.session_state.conv_title_set = True
+    st.session_state.current_conv_title = next(
+        (s["title"] for s in st.session_state.get("conversation_summaries", [])
+         if s["conversation_id"] == cid), "conversation"
+    )
 
 
 def _rate_limited() -> bool:
@@ -270,7 +259,7 @@ def _rate_limited() -> bool:
     return False
 
 
-def _group_conversations(summaries):
+def _group_conversations(summaries: list[dict]) -> dict[str, list[dict]]:
     today     = date.today()
     yesterday = today - timedelta(days=1)
     week_ago  = today - timedelta(days=7)
@@ -289,18 +278,23 @@ def _group_conversations(summaries):
 
 # ── Rendering helpers ─────────────────────────────────────────────────────────
 
-def _render_message(msg: dict) -> None:
+import html as html_lib
+
+def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | None = None) -> None:
     role  = msg["role"]
     ts    = msg.get("timestamp", "")
     label = "You" if role == "user" else "🛡️ SecurCoach"
     cls   = "msg-user" if role == "user" else "msg-ai"
+    safe_ts = html_lib.escape(ts)
+    
+    target = container or st
     # Render the header
-    st.markdown(
-        f'<div class="{cls}"><div class="msg-meta">{label} · {ts}</div></div>',
+    target.markdown(
+        f'<div class="{cls}"><div class="msg-meta">{label} · {safe_ts}</div></div>',
         unsafe_allow_html=True,
     )
     # Let Streamlit render markdown properly inside a container
-    with st.container():
+    with target.container():
         st.markdown(msg["content"])
 
 
@@ -312,7 +306,7 @@ def _export_markdown() -> str:
         ts    = msg.get("timestamp", "")
         lines.append(f"{role} _{ts}_\n")
         lines.append(msg["content"])
-        lines.append("\n---\n")
+        lines.append("\n---")
     return "\n".join(lines)
 
 
@@ -362,10 +356,10 @@ with st.sidebar:
     current_cid = st.session_state.current_conversation_id
 
     if summaries:
-        grouped = _group_conversations(summaries[:30])
+        grouped = _group_conversations(summaries)
         for group_name, items in grouped.items():
             st.markdown(f"<small style='color:var(--text3)'>{group_name}</small>", unsafe_allow_html=True)
-            for s in items:
+            for s in items[:15]:  # show up to 15 per group
                 cid   = s["conversation_id"]
                 title = s["title"]
                 col1, col2 = st.columns([4, 1])
@@ -499,12 +493,14 @@ if prompt:
         for chunk in stream:
             buffer += chunk
             full_response = buffer
-            ai_placeholder.markdown(
-                f'<div class="msg-ai">'
-                f'<div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>'
-                f'{buffer}▌</div>',
-                unsafe_allow_html=True,
-            )
+            # Use a container to render header (HTML) and body (Markdown) separately
+            # so that bold/code blocks in the buffer are rendered by Streamlit.
+            with ai_placeholder.container():
+                st.markdown(
+                    f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div></div>',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f"{buffer}▌")
 
         # Final render without cursor
         if not full_response.strip():
@@ -520,8 +516,7 @@ if prompt:
                 f'</div>',
                 unsafe_allow_html=True,
             )
-            with ai_placeholder.container():
-                st.markdown(full_response)
+            _render_message({"role": "assistant", "content": full_response, "timestamp": now_ts}, container=ai_placeholder)
 
     except Exception as exc:
         full_response = f"⚠️ Error: {exc}"
@@ -532,7 +527,7 @@ if prompt:
     finally:
         st.session_state.is_generating = False
 
-    if full_response:
+    if full_response and not full_response.startswith("⚠️"):
         # Save AI response
         ai_msg = {"role": "assistant", "content": full_response, "timestamp": now_ts}
         st.session_state.messages.append(ai_msg)
@@ -550,6 +545,7 @@ if prompt:
                 user_email, st.session_state.current_conversation_id, title
             )
             st.session_state.conv_title_set = True
-            _refresh_conversations()
+            st.session_state.current_conv_title = title
+            _refresh_conversations(force=True)
 
     st.rerun()

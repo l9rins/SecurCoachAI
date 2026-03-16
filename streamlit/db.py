@@ -40,31 +40,29 @@ def _req(
     if extra_headers:
         headers.update(extra_headers)
 
-    try:
-        for attempt in range(2):
-            try:
-                resp = requests.request(
-                    method, url, headers=headers, json=payload, timeout=20
-                )
-                resp.raise_for_status()
-                return resp.json() if resp.text.strip() else None
-            except requests.HTTPError as exc:
-                if attempt == 1:
-                    _set_error(f"Supabase HTTP {exc.response.status_code}: {exc.response.text[:200]}")
-                if exc.response.status_code >= 500:
-                    continue  # Retry on server errors
-                return None
-            except (requests.ConnectionError, requests.Timeout) as exc:
-                if attempt == 1:
-                    _set_error(f"Supabase connection error: {str(exc)}")
-                continue  # Retry on connection issues
-            except Exception as exc:
-                if attempt == 1:
-                    _set_error(str(exc))
-                return None
-    except Exception as fatal_exc:
-        _set_error(f"Fatal database error: {str(fatal_exc)}")
-        return None
+    for attempt in range(2):
+        try:
+            resp = requests.request(
+                method, url, headers=headers, json=payload, timeout=20
+            )
+            resp.raise_for_status()
+            return resp.json() if resp.text.strip() else None
+        except requests.HTTPError as exc:
+            if attempt == 1:
+                _set_error(f"Supabase HTTP {exc.response.status_code}: {exc.response.text[:200]}")
+            if exc.response.status_code >= 500:
+                continue  # Retry on server errors
+            return None
+        except (requests.ConnectionError, requests.Timeout) as exc:
+            if attempt == 1:
+                _set_error(f"Supabase connection error: {str(exc)}")
+            continue  # Retry on connection issues
+        except Exception as exc:
+            if attempt == 1:
+                _set_error(str(exc))
+            return None
+    return None
+
 
 
 def _set_error(msg: str) -> None:

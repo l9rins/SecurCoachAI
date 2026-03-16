@@ -146,7 +146,6 @@ def stream_response(messages: list[dict]) -> Generator[str, None, None]:
 def generate_title(first_message: str) -> str:
     """Generate a short 4-6 word title for a cybersecurity chat."""
     try:
-        genai.configure(api_key=config.gemini_api_key())
         model = genai.GenerativeModel("gemini-2.0-flash")
         result = model.generate_content(
             f"Create a short 4-6 word title for a cybersecurity chat starting with: "
