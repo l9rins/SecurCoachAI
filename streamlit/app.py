@@ -279,7 +279,6 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
         target.markdown(msg["content"])
 
 
-
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
     lines = [f"# SecurCoach AI — {domain} conversation\n"]
@@ -366,9 +365,10 @@ with st.sidebar:
     mins    = int(elapsed.total_seconds() // 60)
     st.markdown(
         f"<small style='color:var(--text3)'>Session: {mins}m &nbsp;|&nbsp; "
-        f"Messages: {st.session_state.total_interactions}</small>",
+        f"Sent: {st.session_state.total_interactions}</small>",
         unsafe_allow_html=True,
     )
+    st.divider()
 
     # Export
     if st.session_state.messages:

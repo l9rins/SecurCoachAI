@@ -3,7 +3,6 @@ db.py — Supabase REST helpers for chat history.
 All errors are surfaced via st.session_state["db_error"] and logged.
 """
 from __future__ import annotations
-import html
 from datetime import datetime
 from urllib.parse import quote
 from uuid import uuid4
@@ -81,7 +80,7 @@ def get_error() -> str | None:
 
 def load_conversation_summaries(user_id: str) -> list[dict]:
     query = (
-        f"select=conversation_id,title,message,created_at"
+        f"select=conversation_id,title,created_at"
         f"&user_id=eq.{quote(user_id, safe='')}"
         f"&order=created_at.desc"
         f"&limit=2000"
@@ -104,11 +103,7 @@ def load_conversation_summaries(user_id: str) -> list[dict]:
         if not cid or cid in seen:
             continue
         seen.add(cid)
-        message = str(row.get("message", "")).strip()
-        title = titles.get(
-            cid,
-            (message[:40] + ("…" if len(message) > 40 else "")) or "New conversation",
-        )
+        title = titles.get(cid, "New conversation")
         summaries.append(
             {
                 "conversation_id": cid,

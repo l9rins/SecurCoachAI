@@ -52,7 +52,10 @@ def supabase_jwt_secret() -> str:
     return _get("SUPABASE_JWT_SECRET")
 
 def react_app_url() -> str:
-    return _get("REACT_APP_URL", "http://localhost:3000")
+    url = _get("REACT_APP_URL", "http://localhost:3000")
+    if url and not url.startswith(("http://", "https://")):
+        raise RuntimeError("REACT_APP_URL must start with http:// or https://")
+    return url
 
 def chat_history_table() -> str:
     return _get("SUPABASE_CHAT_HISTORY_TABLE", "chat_history")
