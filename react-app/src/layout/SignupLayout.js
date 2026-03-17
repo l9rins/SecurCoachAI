@@ -49,7 +49,7 @@ export default function SignupLayout({ onSwitchToLogin }) {
     setLoading(true);
     setApiError("");
     try {
-      const data = await signUpUser({
+      await signUpUser({
         name:     form.name,
         username: form.username,
         email:    form.email,
