@@ -8,7 +8,7 @@ import streamlit as st
 
 
 _REQUIRED = [
-    "GEMINI_API_KEY",
+    "GROQ_API_KEY",
     "SUPABASE_URL",
     "SUPABASE_KEY",
     "SUPABASE_JWT_SECRET",
@@ -36,8 +36,8 @@ def validate() -> None:
 
 # ── Public accessors ──────────────────────────────────────────────────────────
 
-def gemini_api_key() -> str:
-    return _get("GEMINI_API_KEY")
+def groq_api_key() -> str:
+    return _get("GROQ_API_KEY")
 
 def supabase_url() -> str:
     url = _get("SUPABASE_URL").rstrip("/")

@@ -1,10 +1,10 @@
 """
-chat.py — Google Gemini 2.0 Flash integration with streaming support.
+chat.py — Groq LLM integration with streaming support.
 """
 from __future__ import annotations
 from typing import Generator
 
-import google.generativeai as genai
+from groq import Groq
 import streamlit as st
 
 import config
@@ -96,51 +96,53 @@ _SUGGESTED_QUESTIONS: dict[str, list[str]] = {
     ],
 }
 
+# ── Model to use ──────────────────────────────────────────────────────────────
+_MODEL = "llama-3.3-70b-versatile"  # or "mixtral-8x7b-32768", "llama3-70b-8192"
+
 
 def get_suggestions(domain: str) -> list[str]:
     return _SUGGESTED_QUESTIONS.get(domain, [])
 
 
-def _get_client() -> genai.GenerativeModel:
-    domain = st.session_state.get("selected_domain", "General Security")
-    cache_key = f"gemini_client_{domain}"
-    if cache_key not in st.session_state:
-        genai.configure(api_key=config.gemini_api_key())
-        st.session_state[cache_key] = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=_SYSTEM_PROMPTS.get(domain, _SYSTEM_PROMPTS["General Security"]),
-        )
-    return st.session_state[cache_key]
+def _get_client() -> Groq:
+    """Return a cached Groq client (one per session)."""
+    if "groq_client" not in st.session_state:
+        st.session_state["groq_client"] = Groq(api_key=config.groq_api_key())
+    return st.session_state["groq_client"]
 
 
-def _build_history(messages: list[dict]) -> list[dict]:
-    """Convert last 20 messages into Gemini history format."""
-    history: list[dict] = []
-    # Send up to last 20 messages as context to maintain coherence without bloat
-    context_pool = messages[:-1]  # exclude the current prompt
-    for msg in context_pool[-20:]:
-        role = "user" if msg["role"] == "user" else "model"
-        history.append({"role": role, "parts": [msg["content"]]})
-    return history
+def _build_messages(messages: list[dict], domain: str) -> list[dict]:
+    """Build the full message list: system prompt + last 20 turns."""
+    system_prompt = _SYSTEM_PROMPTS.get(domain, _SYSTEM_PROMPTS["General Security"])
+    history = []
+    for msg in messages[-20:]:
+        role = "user" if msg["role"] == "user" else "assistant"
+        history.append({"role": role, "content": msg["content"]})
+    return [{"role": "system", "content": system_prompt}] + history
 
 
 def stream_response(messages: list[dict]) -> Generator[str, None, None]:
     """
-    Yields text chunks from Gemini for the last message in `messages`.
+    Yields text chunks from Groq for the last message in `messages`.
     Raises on API errors so the caller can display them.
     """
     if not messages:
         return
 
+    domain = st.session_state.get("selected_domain", "General Security")
     client = _get_client()
-    history = _build_history(messages)
-    prompt  = messages[-1]["content"]
+    built  = _build_messages(messages, domain)
 
-    chat = client.start_chat(history=history)
-    response = chat.send_message(prompt, stream=True)
+    stream = client.chat.completions.create(
+        model=_MODEL,
+        messages=built,
+        stream=True,
+        max_tokens=2048,
+        temperature=0.7,
+    )
 
-    for chunk in response:
-        text = chunk.text
+    for chunk in stream:
+        text = chunk.choices[0].delta.content
         if text:
             yield text
 
@@ -148,13 +150,22 @@ def stream_response(messages: list[dict]) -> Generator[str, None, None]:
 def generate_title(first_message: str) -> str:
     """Generate a short 4-6 word title for a cybersecurity chat."""
     try:
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        result = model.generate_content(
-            f"Create a short 4-6 word title for a cybersecurity chat starting with: "
-            f'"{first_message[:200]}". Reply with only the title.',
-            request_options={"timeout": 5},  # don't wait more than 5s
+        client = _get_client()
+        response = client.chat.completions.create(
+            model=_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"Create a short 4-6 word title for a cybersecurity chat "
+                        f'starting with: "{first_message[:200]}". Reply with only the title.'
+                    ),
+                }
+            ],
+            max_tokens=20,
+            temperature=0.5,
         )
-        title = result.text.strip().strip('"').strip("'")
+        title = response.choices[0].message.content.strip().strip('"').strip("'")
         return title[:60] if title else first_message[:40]
     except Exception:
         return first_message[:40]  # silent fallback, never blocks

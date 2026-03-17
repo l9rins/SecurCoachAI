@@ -485,7 +485,7 @@ if prompt:
 
         # Final render without cursor
         if not full_response.strip():
-            full_response = "⚠️ No response received. Gemini may be rate-limited — please try again."
+            full_response = "⚠️ No response received. The AI may be rate-limited — please try again."
             ai_placeholder.markdown(
                 f'<div class="err-banner">{full_response}</div>',
                 unsafe_allow_html=True,
