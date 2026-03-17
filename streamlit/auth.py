@@ -15,33 +15,58 @@ import config
 
 
 def verify_jwt(token: str) -> str | None:
-    """
-    Verify a Supabase JWT and return the user's email, or None on failure.
-    Requires PyJWT and SUPABASE_JWT_SECRET — fails closed (returns None) if
-    either is unavailable.
-    """
     if not token:
         return None
     if not _HAS_PYJWT:
         st.error("PyJWT is not installed. Run: pip install PyJWT")
         return None
-    secret = config.supabase_jwt_secret()
-    if not secret:
-        st.error("SUPABASE_JWT_SECRET is not configured.")
-        return None
     try:
-        payload = pyjwt.decode(
-            token,
-            secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
+        # Decode header to check algorithm without verification
+        header = pyjwt.get_unverified_header(token)
+        alg = header.get("alg", "HS256")
+
+        if alg == "HS256":
+            secret = config.supabase_jwt_secret()
+            if not secret:
+                st.error("SUPABASE_JWT_SECRET is not configured.")
+                return None
+            payload = pyjwt.decode(
+                token,
+                secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
+        else:
+            # ES256 — fetch Supabase JWKS public key
+            import urllib.request, json
+            supabase_url = config.supabase_url()
+            jwks_url = f"{supabase_url}/auth/v1/.well-known/jwks.json"
+            with urllib.request.urlopen(jwks_url) as r:
+                jwks = json.loads(r.read())
+            from jwt.algorithms import ECAlgorithm
+            kid = header.get("kid")
+            key_data = next(
+                (k for k in jwks["keys"] if k.get("kid") == kid),
+                jwks["keys"][0]
+            )
+            public_key = ECAlgorithm.from_jwk(json.dumps(key_data))
+            payload = pyjwt.decode(
+                token,
+                public_key,
+                algorithms=["ES256"],
+                audience="authenticated",
+            )
+
         email = payload.get("email", "")
         return email.lower().strip() if email else None
+
     except pyjwt.ExpiredSignatureError:
         st.warning("Session expired. Please log in again.")
         return None
     except pyjwt.InvalidTokenError:
+        return None
+    except Exception as e:
+        st.error(f"Auth error: {e}")
         return None
 
 
