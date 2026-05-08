@@ -10,6 +10,34 @@ import streamlit as st
 
 import config
 
+# ── Models & Domains (Top-level for immediate init) ───────────────────────────
+
+MODELS: dict[str, dict] = {
+    "Llama 3.3 70B": {
+        "id": "llama-3.3-70b-versatile",
+        "desc": "Most capable — best for complex topics",
+    },
+    "Llama 3.1 8B": {
+        "id": "llama-3.1-8b-instant",
+        "desc": "Fast — good for quick questions",
+    },
+    "Mixtral 8x7B": {
+        "id": "mixtral-8x7b-32768",
+        "desc": "Balanced — 32K context window",
+    },
+}
+
+MODEL_NAMES: list[str] = list(MODELS.keys())
+DEFAULT_MODEL: str = MODEL_NAMES[0]
+DOMAINS: list[str] = [
+    "General Security",
+    "Network Security",
+    "Web App Security",
+    "Cloud Security",
+    "Cryptography",
+    "Incident Response"
+]
+
 _OUTPUT_FORMAT = (
     "\n\nAlways structure your response using these sections:\n"
     "## Answer\n[Your main explanation]\n\n"
@@ -67,7 +95,7 @@ _SYSTEM_PROMPTS: dict[str, str] = {
     ),
 }
 
-DOMAINS: list[str] = list(_SYSTEM_PROMPTS.keys())
+
 
 _SUGGESTED_QUESTIONS: dict[str, list[str]] = {
     "General Security": [
@@ -102,25 +130,7 @@ _SUGGESTED_QUESTIONS: dict[str, list[str]] = {
     ],
 }
 
-# ── Models ────────────────────────────────────────────────────────────────────
 
-MODELS: dict[str, dict] = {
-    "Llama 3.3 70B": {
-        "id": "llama-3.3-70b-versatile",
-        "desc": "Most capable — best for complex topics",
-    },
-    "Llama 3.1 8B": {
-        "id": "llama-3.1-8b-instant",
-        "desc": "Fast — good for quick questions",
-    },
-    "Mixtral 8x7B": {
-        "id": "mixtral-8x7b-32768",
-        "desc": "Balanced — 32K context window",
-    },
-}
-
-MODEL_NAMES: list[str] = list(MODELS.keys())
-DEFAULT_MODEL: str = MODEL_NAMES[0]
 
 
 def get_model() -> str:

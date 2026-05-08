@@ -19,7 +19,7 @@ except RuntimeError as _cfg_err:
 
 import auth
 import db
-import chat
+import llm_engine
 import quiz
 import progress
 
@@ -46,8 +46,8 @@ def _init_state() -> None:
     st.session_state.setdefault("session_start", datetime.now())
     st.session_state.setdefault("pending_prompt", None)
     st.session_state.setdefault("is_generating", False)
-    st.session_state.setdefault("selected_domain", chat.DOMAINS[0])
-    st.session_state.setdefault("selected_model", chat.DEFAULT_MODEL)
+    st.session_state.setdefault("selected_domain", llm_engine.DOMAINS[0])
+    st.session_state.setdefault("selected_model", llm_engine.DEFAULT_MODEL)
     st.session_state.setdefault("lab_mode", False)
     st.session_state.setdefault("last_msg_time", 0.0)
     st.session_state.setdefault("conv_title_set", False)
@@ -187,33 +187,30 @@ with st.sidebar:
     st.divider()
 
     # Domain selector
-    st.markdown("**Domain**")
-    new_domain = st.selectbox(
-        "Domain",
-        chat.DOMAINS,
-        index=chat.DOMAINS.index(st.session_state.selected_domain),
-        label_visibility="collapsed",
+    st.session_state.selected_domain = st.selectbox(
+        "Learning Domain",
+        llm_engine.DOMAINS,
+        index=llm_engine.DOMAINS.index(st.session_state.selected_domain)
+              if st.session_state.selected_domain in llm_engine.DOMAINS else 0,
+        help="Focus the AI's training on a specific security domain.",
     )
-    if new_domain != st.session_state.selected_domain:
-        if st.session_state.messages:
-            st.warning(
-                f"Switching domain to **{new_domain}** will change the AI's context. "
-                "Start a new conversation for the best results."
-            )
-        st.session_state.selected_domain = new_domain
+    if st.session_state.messages:
+        st.warning(
+            f"Switching domain will change the AI's context. "
+            "Start a new conversation for the best results."
+        )
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
     # Model selector
-    st.markdown("**AI Model**")
-    new_model = st.selectbox(
-        "Model",
-        chat.MODEL_NAMES,
-        index=chat.MODEL_NAMES.index(st.session_state.selected_model) if st.session_state.selected_model in chat.MODEL_NAMES else 0,
-        format_func=lambda m: f"{m} ({chat.MODELS[m]['desc'].split(' — ')[0]})",
-        label_visibility="collapsed",
+    st.session_state.selected_model = st.selectbox(
+        "AI Model",
+        llm_engine.MODEL_NAMES,
+        index=llm_engine.MODEL_NAMES.index(st.session_state.selected_model) 
+              if st.session_state.selected_model in llm_engine.MODEL_NAMES else 0,
+        help="Switch between different Groq-hosted models.",
     )
-    st.session_state.selected_model = new_model
+    st.markdown(f"<small style='color:var(--text3)'>{llm_engine.MODELS[st.session_state.selected_model]['desc']}</small>", unsafe_allow_html=True)
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
@@ -331,7 +328,7 @@ st.divider()
 
 # ── Suggested questions (when chat is empty) ──────────────────────────────────
 if not st.session_state.messages:
-    suggestions = chat.get_suggestions(st.session_state.selected_domain, lab_mode=st.session_state.lab_mode)
+    suggestions = llm_engine.get_suggestions(st.session_state.selected_domain, lab_mode=st.session_state.lab_mode)
     if suggestions:
         mode_label = "Lab challenges" if st.session_state.lab_mode else "Getting started"
         st.markdown(
@@ -420,26 +417,27 @@ if prompt:
     full_response   = ""
 
     try:
-        stream = chat.stream_response(st.session_state.messages, request_title=is_first_exchange)
         buffer = ""
-        for chunk in stream:
-            # Check for stop
-            if st.session_state.get("stop_generation"):
-                break
-            buffer += chunk
-            full_response = buffer
-            # Use a container to render header (HTML) and body (Markdown) separately
-            # so that bold/code blocks in the buffer are rendered by Streamlit.
-            with ai_placeholder.container():
-                st.markdown(
-                    f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div></div>',
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"{buffer}▌")
-            # Show stop button during generation
-            with stop_btn_holder:
-                if st.button("⏹ Stop", key="stop_gen"):
-                    st.session_state.stop_generation = True
+        with st.spinner("🧠 Thinking..."):
+            for chunk in llm_engine.stream_response(st.session_state.messages, request_title=is_first_exchange):
+                # Check for stop
+                if st.session_state.get("stop_generation"):
+                    break
+                
+                buffer += chunk
+                full_response = buffer
+                # Use a container to render header (HTML) and body (Markdown) separately
+                with ai_placeholder.container():
+                    st.markdown(
+                        f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div></div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(f"{buffer}▌")
+                
+                # Show stop button during generation
+                with stop_btn_holder:
+                    if st.button("⏹ Stop", key="stop_gen"):
+                        st.session_state.stop_generation = True
 
         # Clear stop button
         stop_btn_holder.empty()
@@ -473,7 +471,7 @@ if prompt:
         # Extract inline title if this was the first exchange
         extracted_title = None
         if is_first_exchange:
-            full_response, extracted_title = chat.extract_title_from_response(full_response)
+            full_response, extracted_title = llm_engine.extract_title_from_response(full_response)
 
         # Save AI response
         ai_msg = {"role": "assistant", "content": full_response, "timestamp": now_ts}
@@ -487,7 +485,7 @@ if prompt:
 
         # Set conversation title on first exchange
         if is_first_exchange:
-            title = extracted_title or chat.generate_title(prompt)
+            title = extracted_title or llm_engine.generate_title(prompt)
             db.update_conversation_title(
                 user_email, st.session_state.current_conversation_id, title
             )

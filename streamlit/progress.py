@@ -7,7 +7,7 @@ import streamlit as st
 import html as html_lib
 
 import db
-import chat
+import llm_engine
 
 # ── Learning paths: 5 topics per domain ───────────────────────────────────────
 
@@ -76,7 +76,7 @@ def render_progress(user_email: str) -> None:
             unsafe_allow_html=True,
         )
     else:
-        for domain in chat.DOMAINS:
+        for domain in llm_engine.DOMAINS:
             if domain in domain_scores:
                 r = domain_scores[domain]
                 pct = r["score"] / r["total"] if r["total"] > 0 else 0
@@ -110,7 +110,7 @@ def render_progress(user_email: str) -> None:
     # Domain tab selector
     domain_tab = st.selectbox(
         "Select domain",
-        chat.DOMAINS,
+        llm_engine.DOMAINS,
         key="progress_domain_select",
         label_visibility="collapsed",
     )

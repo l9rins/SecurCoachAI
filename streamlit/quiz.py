@@ -8,7 +8,7 @@ import streamlit as st
 import html as html_lib
 
 import db
-import chat
+import llm_engine
 
 # ── Quiz questions ────────────────────────────────────────────────────────────
 # Each question: q, options (list of 4), answer (0-indexed), explanation
@@ -361,7 +361,7 @@ def render_quiz(user_email: str) -> None:
     # Domain selector for quiz
     quiz_domain = st.selectbox(
         "Select a domain to test",
-        chat.DOMAINS,
+        llm_engine.DOMAINS,
         key="quiz_domain_select",
     )
 
