@@ -96,7 +96,17 @@ div[data-testid="stRadio"] label:hover {
 }
 div[data-testid="stRadio"] label[data-checked="true"] {
   background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), transparent);
-  border-left: 2px solid var(--color-accent-gold); color: #FFF; border-radius: 4px 8px 8px 4px;
+  border-left: 2px solid var(--color-accent-gold); border-radius: 4px 8px 8px 4px;
+}
+div[data-testid="stRadio"] label[data-checked="true"] p,
+div[data-testid="stRadio"] label[data-checked="true"] * {
+  color: var(--color-accent-gold) !important;
+}
+
+/* Accessibility Focus */
+*:focus-visible {
+  outline: 2px solid var(--color-accent-gold) !important;
+  outline-offset: 2px;
 }
 
 /* ── Typography ── */

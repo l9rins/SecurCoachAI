@@ -293,14 +293,16 @@ with st.sidebar:
 
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
-    # Model selector
-    st.session_state.selected_model = st.selectbox(
-        "AI Model",
-        llm_engine.MODEL_NAMES,
-        index=llm_engine.MODEL_NAMES.index(st.session_state.selected_model) 
-              if st.session_state.selected_model in llm_engine.MODEL_NAMES else 0,
-        help="Switch between different models.",
-    )
+    # Model selector (Advanced Settings)
+    with st.expander("⚙️ Advanced Settings"):
+        st.session_state.selected_model = st.selectbox(
+            "AI Model",
+            llm_engine.MODEL_NAMES,
+            index=llm_engine.MODEL_NAMES.index(st.session_state.selected_model) 
+                  if st.session_state.selected_model in llm_engine.MODEL_NAMES else 0,
+            help="Switch between different models.",
+            label_visibility="collapsed"
+        )
     
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
@@ -313,6 +315,7 @@ with st.sidebar:
     st.toggle(
         "🧪 Hands-On Lab Mode",
         key="lab_mode",
+        help="Practice in a live terminal environment",
         on_change=_on_lab_mode_change
     )
 
@@ -343,23 +346,12 @@ with st.sidebar:
         summaries = [s for s in summaries if q in s.get("title", "").lower()]
     current_cid = st.session_state.current_conversation_id
 
-    # Sidebar Footer: Initials Avatar
-    st.markdown("<div style='margin-top:auto;padding-top:20px;border-top:0.5px solid var(--color-border-default)'></div>", unsafe_allow_html=True)
-    initials = "".join([n[0] for n in user_email.split("@")[0].split(".") if n])[:2].upper() or "MR"
-    st.markdown(
-        f"<div style='display:flex;align-items:center;gap:10px;padding:4px 2px'>"
-        f"<div style='width:28px;height:28px;border-radius:50%;background:#1A1508;border:0.5px solid rgba(193,148,60,0.3);display:flex;align-items:center;justify-content:center;font-family:\"Space Grotesk\";font-size:10px;font-weight:500;color:#C1943C'>"
-        f"{initials}</div>"
-        f"<div style='font-family:\"Space Grotesk\";font-size:9px;color:var(--color-text-faint);text-transform:uppercase;letter-spacing:0.05em'>"
-        f"Session Active</div>"
-        f"</div>",
-        unsafe_allow_html=True
-    )
+    # Initials block moved to bottom
 
     if summaries:
         grouped = _group_conversations(summaries)
         for group_name, items in grouped.items():
-            st.markdown(f"<small style='color:var(--text3)'>{group_name}</small>", unsafe_allow_html=True)
+            st.markdown(f"<small style='color:var(--color-text-muted)'>{group_name}</small>", unsafe_allow_html=True)
             for s in items[:15]:  # show up to 15 per group
                 cid   = s["conversation_id"]
                 title = s["title"]
@@ -376,18 +368,16 @@ with st.sidebar:
                         _refresh_conversations(force=True)
                         st.rerun()
     else:
-        st.markdown("<small style='color:var(--text3)'>No conversations yet.</small>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='padding: 16px; background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 8px; text-align: center; margin-bottom: 12px;'>"
+            "<p style='color: var(--color-text-bright); font-size: 13px; font-weight: 600; margin-bottom: 4px;'>No conversations</p>"
+            "<p style='color: var(--color-text-muted); font-size: 12px; margin-bottom: 12px; line-height: 1.4;'>Start a secure session to begin.</p>"
+            "</div>", unsafe_allow_html=True
+        )
+        if st.button("⚡ Start your first session", use_container_width=True):
+            _new_conversation()
+            st.rerun()
 
-    st.divider()
-
-    # Stats
-    elapsed = (datetime.now() - st.session_state.session_start)
-    mins    = int(elapsed.total_seconds() // 60)
-    st.markdown(
-        f"<small style='color:var(--text3)'>Session: {mins}m &nbsp;|&nbsp; "
-        f"Sent: {st.session_state.total_interactions}</small>",
-        unsafe_allow_html=True,
-    )
     st.divider()
 
     # Export
@@ -403,6 +393,19 @@ with st.sidebar:
             use_container_width=True,
         )
 
+    # Sidebar Footer: Initials Avatar
+    st.markdown("<div style='margin-top:auto;padding-top:20px'></div>", unsafe_allow_html=True)
+    initials = "".join([n[0] for n in user_email.split("@")[0].split(".") if n])[:2].upper() or "MR"
+    st.markdown(
+        f"<div style='display:flex;align-items:center;gap:10px;padding:4px 2px'>"
+        f"<div style='width:28px;height:28px;border-radius:50%;background:#1A1508;border:0.5px solid rgba(193,148,60,0.3);display:flex;align-items:center;justify-content:center;font-family:\"Space Grotesk\";font-size:10px;font-weight:500;color:#C1943C'>"
+        f"{initials}</div>"
+        f"<div style='font-family:\"Space Grotesk\";font-size:11px;color:var(--color-text-muted);letter-spacing:0.02em'>"
+        f"{html_lib.escape(user_email)}</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+
 # ── Page dispatch ─────────────────────────────────────────────────────────────
 if st.session_state.active_page == "📝 Quiz":
     quiz.render_quiz(user_email)
@@ -416,11 +419,11 @@ if st.session_state.active_page == "📊 Progress":
 st.markdown(
     f"<header style='display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 var(--spacing-xl);border-bottom:0.5px solid var(--color-border);background:var(--color-surface);margin:-1rem -1rem 1rem -1rem'>"
     f"<div style='display:flex;align-items:center;gap:var(--spacing-base)'>"
-    f"<span style='font-family:var(--font-heading);font-weight:600;font-size:12px;color:var(--color-accent-gold);text-transform:uppercase;letter-spacing:0.05em'>{html_lib.escape(st.session_state.selected_domain)}</span>"
+    f"<span style='font-family:var(--font-heading);font-weight:600;font-size:14px;color:var(--color-accent-gold);text-transform:capitalize;letter-spacing:0.04em'>{html_lib.escape(st.session_state.selected_domain)}</span>"
     f"</div>"
     f"<div style='display:flex;align-items:center;gap:var(--spacing-sm)'>"
     f"<i class='ph ph-cpu' style='font-size:13px;color:var(--color-text-muted)'></i>"
-    f"<span style='font-family:var(--font-heading);font-weight:500;font-size:11px;color:var(--color-text-muted)'>{html_lib.escape(st.session_state.selected_model)}</span>"
+    f"<span style='font-family:var(--font-heading);font-weight:500;font-size:12px;color:var(--color-text-muted)'>Model: {html_lib.escape(st.session_state.selected_model)}</span>"
     f"</div>"
     f"</header>", 
     unsafe_allow_html=True
@@ -458,7 +461,7 @@ if not st.session_state.messages:
         empty_hint = "Ask anything about cybersecurity — or pick a suggestion above."
     st.markdown(
         f"<div style='text-align:center;padding:3rem 0 1rem;"
-        f"color:var(--text3);font-size:.9rem'>"
+        f"color:var(--color-text-muted);font-size:.9rem'>"
         f"{empty_hint}</div>",
         unsafe_allow_html=True,
     )

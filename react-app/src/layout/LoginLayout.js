@@ -13,6 +13,7 @@ export default function LoginLayout({ onSwitchToSignup }) {
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -172,6 +173,7 @@ export default function LoginLayout({ onSwitchToSignup }) {
               onChange={(e) => update("email", e.target.value)}
               disabled={loading}
               autoComplete="email"
+              autoFocus
               aria-describedby={errors.email ? "email-error" : undefined}
             />
             {errors.email && <div id="email-error" className="field-error">{errors.email}</div>}
@@ -179,17 +181,28 @@ export default function LoginLayout({ onSwitchToSignup }) {
 
           <div className="field-group">
             <label className="field-label" htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              className={`field-input ${errors.password ? "field-input--error" : ""}`}
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => update("password", e.target.value)}
-              disabled={loading}
-              autoComplete="current-password"
-              aria-describedby={errors.password ? "password-error" : undefined}
-            />
+            <div className="password-input-wrapper" style={{ position: "relative" }}>
+              <input
+                id="login-password"
+                className={`field-input ${errors.password ? "field-input--error" : ""}`}
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => update("password", e.target.value)}
+                disabled={loading}
+                autoComplete="current-password"
+                aria-describedby={errors.password ? "password-error password-hint" : "password-hint"}
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                <i className={showPassword ? "ph ph-eye-slash" : "ph ph-eye"}></i>
+              </button>
+            </div>
+            <div id="password-hint" className="field-hint" style={{ fontSize: "11px", color: "var(--color-text-muted)", marginTop: "4px" }}>8+ characters</div>
             {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
           </div>
 
@@ -200,16 +213,18 @@ export default function LoginLayout({ onSwitchToSignup }) {
               </span>
             ) : "Sign in"}
           </button>
+          
+          <div style={{ textAlign: "center", marginTop: "12px" }}>
+            <button type="button" className="link-btn secondary" onClick={() => setForgotMode(true)} aria-label="Forgot your password?" style={{ fontSize: "12px" }}>
+              Forgot password?
+            </button>
+          </div>
         </form>
 
-        <div className="auth-footer">
-          <button className="link-btn secondary" onClick={() => setForgotMode(true)} aria-label="Forgot your password?">
-            Forgot password
-          </button>
-          <span style={{ color: 'var(--color-border)' }}>·</span>
-          <button className="link-btn" onClick={onSwitchToSignup} aria-label="Create a new account">
-            Create account
-          </button>
+        <div className="auth-footer" style={{ flexDirection: "column", gap: "8px", marginTop: "24px" }}>
+          <div style={{ fontSize: "13px", color: "var(--color-text-muted)" }}>
+            New here? <button className="link-btn" onClick={onSwitchToSignup} aria-label="Create a new account">Create an account</button>
+          </div>
         </div>
 
         <div className="security-badge">

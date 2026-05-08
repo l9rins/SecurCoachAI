@@ -40,8 +40,15 @@ body {
   overflow-x: hidden;
   position: relative;
   background-image: 
-    radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.04), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(59, 139, 212, 0.04), transparent 25%);
+    radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05), transparent 35%),
+    radial-gradient(circle at 85% 30%, rgba(212, 175, 55, 0.02), transparent 35%);
+}
+
+/* ── Accessibility Focus ── */
+*:focus-visible {
+  outline: 2px solid var(--color-accent-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ── Dynamic Floating Halos ── */
@@ -81,7 +88,7 @@ body::after {
 
 .auth-card {
   width: 400px;
-  background: var(--color-surface);
+  background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.06), transparent 70%), var(--color-surface);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--color-border);
@@ -178,6 +185,14 @@ body::after {
   box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
 }
 
+.password-toggle-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--color-text-muted);
+  cursor: pointer; font-size: 18px; padding: 4px; display: flex; align-items: center; justify-content: center;
+  transition: color var(--transition-fast);
+}
+.password-toggle-btn:hover { color: var(--color-text-bright); }
+
 .field-input--error { border-color: var(--color-text-error); }
 .field-error { font-size: 13px; color: var(--color-text-error); margin-top: 4px; }
 
@@ -248,20 +263,8 @@ body::after {
 .security-badge {
   position: absolute; bottom: -40px; left: 0; right: 0;
   display: flex; justify-content: center; align-items: center; gap: 6px;
-  font-family: var(--font-heading); font-weight: 500; font-size: 11px;
-  color: rgba(255, 255, 255, 0.4); letter-spacing: 0.1em;
-}
-
-.security-badge .dot {
-  width: 6px; height: 6px; background: var(--color-text-success);
-  border-radius: 50%; box-shadow: 0 0 8px var(--color-text-success);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(105, 219, 124, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(105, 219, 124, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(105, 219, 124, 0); }
+  font-family: var(--font-heading); font-weight: 500; font-size: 10px;
+  color: rgba(255, 255, 255, 0.25); letter-spacing: 0.1em;
 }
 
 /* ── Spinner ── */
