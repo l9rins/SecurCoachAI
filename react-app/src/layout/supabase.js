@@ -38,7 +38,6 @@ export async function signInUser({ email, password }) {
   if (error) throw new Error(error.message);
 
   const user = data.user;
-  const meta = user.user_metadata || {};
 
   try {
     await upsertProfile(
