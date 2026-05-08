@@ -460,6 +460,85 @@ pre code {
   background: var(--color-accent-gold);
 }
 
+/* ── Progress & Stats ── */
+.progress-domain-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--color-text-bright);
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+.progress-domain-label .progress-score-label,
+.progress-score-label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.stat-card {
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+  text-align: center;
+}
+.stat-num {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  color: var(--color-text-bright);
+  font-weight: 600;
+}
+.stat-label {
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+/* ── Quiz result helpers ── */
+.quiz-prev-score {
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  margin-bottom: var(--spacing-base);
+}
+
+.quiz-explanation {
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  padding: var(--spacing-sm);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  margin: var(--spacing-sm) 0 var(--spacing-lg) 0;
+}
+.quiz-explanation.correct {
+  border-left: 3px solid var(--color-accent-gold);
+}
+
+.quiz-score-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--color-surface);
+  border: 0.5px solid var(--color-border);
+  padding: var(--spacing-md);
+  border-radius: 8px;
+  margin-top: var(--spacing-lg);
+}
+.quiz-score-num {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+}
+.quiz-score-label {
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+}
+
 /* ──────────────────────────────────────────────────────────────────────────
    Focus States (Accessibility)
    ────────────────────────────────────────────────────────────────────────── */

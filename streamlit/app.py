@@ -169,30 +169,63 @@ def _clean_response(text: str) -> str:
 def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | None = None) -> None:
     role  = msg["role"]
     ts    = msg.get("timestamp", "")
-    content = _clean_response(msg["content"])
-    
+    raw_content = msg["content"]
+
     target = container or st
-    
+
     if role == "user":
+        # Always escape user content to avoid HTML injection
         target.markdown(
-            f'<div class="msg-user"><div class="msg-user-bubble">{html_lib.escape(content)}</div></div>',
-            unsafe_allow_html=True
+            f'<div class="msg-user"><div class="msg-user-bubble">{html_lib.escape(raw_content)}</div></div>',
+            unsafe_allow_html=True,
         )
-    else:
-        # AI Header with Phosphor shield icon
-        header_html = (
-            f'<div class="msg-meta">'
-            f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
-            f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
-            f'<span class="name" style="color:var(--color-gold-text);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
-            f'<span class="sep">·</span>'
-            f'<span class="time">{html_lib.escape(ts)}</span>'
-            f'</div>'
-        )
-        target.markdown(
-            f'<div class="msg-ai">{header_html}\n\n{content}\n\n</div>',
-            unsafe_allow_html=True
-        )
+        return
+
+    # AI message: render header, then render content while respecting code fences.
+    header_html = (
+        f'<div class="msg-meta">'
+        f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
+        f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
+        f'<span class="name" style="color:var(--color-accent-gold);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
+        f'<span class="sep">·</span>'
+        f'<span class="time">{html_lib.escape(ts)}</span>'
+        f'</div>'
+    )
+
+    # Start the AI message container and header
+    target.markdown(f'<div class="msg-ai">{header_html}', unsafe_allow_html=True)
+
+    # Split raw content into alternating non-code and code blocks (```...```) so we can render each appropriately
+    import re
+    parts = re.split(r'(```[\s\S]*?```)', raw_content)
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith('```'):
+            # Extract optional language and code body
+            m = re.match(r'```(\w+)?\n([\s\S]*?)```', part)
+            if m:
+                lang = m.group(1) or None
+                code_body = m.group(2)
+            else:
+                # Fallback: strip backticks
+                code_body = part.strip('`')
+                lang = None
+            # Render code block using Streamlit's code renderer (preserves raw content)
+            try:
+                target.code(code_body, language=lang)
+            except Exception:
+                # As a fallback, render inside a pre tag
+                safe_code = html_lib.escape(code_body)
+                target.markdown(f'<pre style="white-space:pre-wrap">{safe_code}</pre>', unsafe_allow_html=True)
+        else:
+            # Non-code segment: clean response (converts markdown headers into styled HTML)
+            cleaned = _clean_response(part)
+            if cleaned and cleaned.strip():
+                target.markdown(cleaned, unsafe_allow_html=True)
+
+    # Close AI message container
+    target.markdown('</div>', unsafe_allow_html=True)
 
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
@@ -401,9 +434,9 @@ if not st.session_state.messages:
     if suggestions:
         mode_label = "Lab challenges" if st.session_state.lab_mode else "Getting started"
         st.markdown(
-            f"<p style='color:var(--text2);margin-bottom:12px'>"
-            f"{mode_label} with <strong style='color:var(--accent)'>"
-            f"{st.session_state.selected_domain}</strong>:</p>",
+            f"<p style='color:var(--color-text-muted);margin-bottom:12px'>"
+                f"{mode_label} with <strong style='color:var(--color-accent-gold)'>"
+                f"{st.session_state.selected_domain}</strong>:</p>",
             unsafe_allow_html=True,
         )
         cols = st.columns(len(suggestions))

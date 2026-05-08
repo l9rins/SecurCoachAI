@@ -353,7 +353,7 @@ def render_quiz(user_email: str) -> None:
     """Render the skill assessment quiz UI."""
     st.markdown("# 📝 Skill Assessment")
     st.markdown(
-        "<p style='color:var(--text2)'>Test your knowledge across security domains. "
+        "<p style='color:var(--color-text-muted)'>Test your knowledge across security domains. "
         "5 questions per domain, results tracked over time.</p>",
         unsafe_allow_html=True,
     )
@@ -439,13 +439,13 @@ def render_quiz(user_email: str) -> None:
 
         pct = score * 100 // len(questions)
         if pct >= 80:
-            grade_color = "var(--accent2)"
+            grade_color = "var(--color-success-text)"
             grade_label = "Excellent"
         elif pct >= 60:
-            grade_color = "var(--accent)"
+            grade_color = "var(--color-accent-gold)"
             grade_label = "Good"
         else:
-            grade_color = "var(--danger)"
+            grade_color = "var(--color-text-error)"
             grade_label = "Needs Practice"
 
         st.markdown(

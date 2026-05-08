@@ -99,10 +99,11 @@ def render_progress(user_email: str) -> None:
     # ── Learning Paths ────────────────────────────────────────────────────
     st.markdown("## Learning Paths")
     st.markdown(
-        "<p style='color:var(--text2)'>Work through topics in each domain. "
+        "<p style='color:var(--color-text-muted)'>Work through topics in each domain. "
         "Click <strong>Learn</strong> to start a guided chat or <strong>Practice</strong> to test in Lab mode.</p>",
         unsafe_allow_html=True,
     )
+    
 
     completed = db.get_completed_topics(user_email)
     completed_ids: set[str] = set(completed) if completed else set()
