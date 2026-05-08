@@ -368,15 +368,16 @@ with st.sidebar:
                         _refresh_conversations(force=True)
                         st.rerun()
     else:
-        st.markdown(
-            "<div style='padding: 16px; background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 8px; text-align: center; margin-bottom: 12px;'>"
-            "<p style='color: var(--color-text-bright); font-size: 13px; font-weight: 600; margin-bottom: 4px;'>No conversations</p>"
-            "<p style='color: var(--color-text-muted); font-size: 12px; margin-bottom: 12px; line-height: 1.4;'>Start a secure session to begin.</p>"
-            "</div>", unsafe_allow_html=True
-        )
-        if st.button("⚡ Start your first session", use_container_width=True):
-            _new_conversation()
-            st.rerun()
+        with st.container(border=True):
+            st.markdown(
+                "<div style='text-align: center; margin-bottom: 12px;'>"
+                "<p style='color: var(--color-text-bright); font-size: 13px; font-weight: 600; margin-bottom: 4px;'>No conversations</p>"
+                "<p style='color: var(--color-text-muted); font-size: 12px; line-height: 1.4;'>Start a secure session to begin.</p>"
+                "</div>", unsafe_allow_html=True
+            )
+            if st.button("⚡ Start your first session", use_container_width=True, type="primary"):
+                _new_conversation()
+                st.rerun()
 
     st.divider()
 

@@ -92,25 +92,36 @@ div[data-testid="stRadio"] label {
   font-family: var(--font-heading); font-weight: 500; font-size: 12px;
   padding: 8px 16px; border-radius: 8px; cursor: pointer;
   transition: all var(--transition-base); border: none; background: transparent;
+  justify-content: center;
 }
+div[data-testid="stRadio"] svg { display: none !important; }
 div[data-testid="stRadio"] label::before, div[data-testid="stRadio"] label::after { display: none; }
 
 div[data-testid="stRadio"] label:hover {
   background: rgba(255, 255, 255, 0.05); color: #FFF;
 }
+div[data-testid="stRadio"] label[data-checked="false"] p {
+  opacity: 0.5;
+}
 div[data-testid="stRadio"] label[data-checked="true"] {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), transparent);
-  border-left: 2px solid var(--color-accent-gold); border-radius: 4px 8px 8px 4px;
+  background: linear-gradient(0deg, rgba(212, 175, 55, 0.15), transparent);
+  border-bottom: 2px solid var(--color-accent-gold) !important; border-radius: 4px 4px 0 0;
+  border-left: none !important;
 }
 div[data-testid="stRadio"] label[data-checked="true"] p,
 div[data-testid="stRadio"] label[data-checked="true"] * {
   color: var(--color-accent-gold) !important;
+  opacity: 1 !important;
 }
 
 /* Accessibility Focus */
-*:focus-visible {
+*:focus-visible,
+button:focus-visible,
+input:focus-visible,
+div[role="button"]:focus-visible,
+div[tabindex="0"]:focus-visible {
   outline: 2px solid var(--color-accent-gold) !important;
-  outline-offset: 2px;
+  outline-offset: 2px !important;
 }
 
 /* ── Typography ── */
@@ -149,6 +160,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 [data-testid="stButton"] > button:hover p { color: #FFF; }
 [data-testid="stButton"] > button:active { transform: translateY(1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+/* Force identical styling for all suggested question cards in columns */
+[data-testid="column"] [data-testid="stButton"] > button {
+  background: rgba(20, 24, 30, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+[data-testid="column"] [data-testid="stButton"] > button:hover {
+  background: rgba(30, 36, 45, 0.7) !important;
+  border-color: var(--color-border-glow) !important;
+}
 
 /* ── Chat Messages ── */
 .msg-user-bubble {
