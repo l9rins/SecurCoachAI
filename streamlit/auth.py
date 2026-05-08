@@ -91,12 +91,19 @@ def apply_query_auth() -> None:
     Authenticate via ?token=<jwt> in the URL.
     Only accepts a properly signed JWT — no plain-text email bypass.
     """
-    token = st.query_params.get("token", "").strip()
+    params = st.query_params
+    token = params.get("token", "").strip()
     if not token:
         return
     
     # Prevent infinite redirect loops on Streamlit Cloud
     if st.session_state.get("processed_token") == token:
+        # If the token is still in the URL but we've processed it, try to remove it once more
+        if "token" in params:
+            try:
+                del st.query_params["token"]
+            except Exception:
+                pass
         return
 
     email = verify_jwt(token)
@@ -105,11 +112,13 @@ def apply_query_auth() -> None:
         st.session_state.auth_user_email = email
         st.session_state.conversation_loaded = False
         st.session_state["processed_token"] = token
-        try:
-            # Attempt to clear the URL, but don't crash or loop if it fails
-            st.query_params.clear()
-        except Exception as e:
-            logger.warning(f"Failed to clear token from URL: {e}")
+        
+        # Target only the token for removal to avoid clearing other potential state
+        if "token" in st.query_params:
+            try:
+                del st.query_params["token"]
+            except Exception as e:
+                logger.warning(f"Failed to remove token from URL: {e}")
 
 
 def get_user_email() -> str:
