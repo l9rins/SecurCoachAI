@@ -22,8 +22,6 @@ async function upsertProfile(userId, email, name, username) {
       {
         id:        userId,
         email:     email.trim().toLowerCase(),
-        full_name: name.trim(),
-        username:  username.trim(),
       },
       { onConflict: "id" }
     );
@@ -45,9 +43,7 @@ export async function signInUser({ email, password }) {
   try {
     await upsertProfile(
       user.id,
-      user.email,
-      meta.name     || meta.full_name || "",
-      meta.username || "",
+      user.email
     );
   } catch (profileErr) {
     // Profile save failed but auth succeeded — warn, don't block
@@ -81,7 +77,7 @@ export async function signUpUser({ name, username, email, password }) {
     // is null and the anon key would be denied by RLS — so we skip silently.
     // signInUser will heal the missing profile row on first login.
     try {
-      await upsertProfile(user.id, normalizedEmail, name, username);
+      await upsertProfile(user.id, normalizedEmail);
     } catch (profileErr) {
       console.warn("Profile upsert skipped (expected when email confirmation is on):", profileErr.message);
     }
