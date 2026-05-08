@@ -133,11 +133,37 @@ def _group_conversations(summaries: list[dict]) -> dict[str, list[dict]]:
 # ── Rendering helpers ─────────────────────────────────────────────────────────
 
 def _clean_response(text: str) -> str:
-    """Strip prompt artifacts and metadata from AI responses."""
+    """Strip prompt artifacts and metadata, and augment headers with icons."""
     import re
     # Remove metadata lines like TITLE: ... or CATEGORY: ...
     text = re.sub(r'^(TITLE|CATEGORY|TOPIC|DOMAIN):\s*.*$', '', text, flags=re.MULTILINE | re.IGNORECASE)
-    # Remove leading/trailing whitespace
+    
+    # Replace markdown headers with styled headers and icons
+    # ph-book-open for Answer, ph-test-tube for Example, ph-brain for Think About This
+    text = re.sub(
+        r'^## Answer', 
+        r'<div class="response-header"><i class="ph ph-book-open"></i><span>Answer</span></div>', 
+        text, flags=re.MULTILINE
+    )
+    text = re.sub(
+        r'^## Example', 
+        r'<div class="response-header"><i class="ph ph-test-tube"></i><span>Example</span></div>', 
+        text, flags=re.MULTILINE
+    )
+    
+    # Special case for "Think About This": Wrap in the think-block class
+    think_match = re.search(r'^## Think About This\s*(.*)', text, flags=re.MULTILINE | re.DOTALL)
+    if think_match:
+        think_text = think_match.group(1).strip()
+        # Remove the match from the main text
+        text = text[:think_match.start()]
+        text += (
+            f'<div class="response-header" style="margin-top:12px;color:#4A7A9A">'
+            f'<i class="ph ph-brain"></i><span>Think About This</span></div>'
+            f'<div class="think-block">{think_text}</div>'
+        )
+
+    # Remove trailing newlines and whitespace
     return text.strip()
 
 def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | None = None) -> None:
@@ -196,15 +222,14 @@ user_email = auth.get_user_email()
 with st.sidebar:
     # Logo block
     st.markdown(
-        "<div style='display:flex;align-items:center;gap:10px;margin-bottom:20px'>"
-        "<div style='width:24px;height:24px;background:#C1943C;border-radius:6px;display:flex;align-items:center;justify-content:center'>"
+        "<div style='display:flex;align-items:center;gap:10px;margin-bottom:24px'>"
+        "<div style='width:24px;height:24px;background:#C1943C;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0'>"
         "<i class='ph ph-shield-check' style='color:#0D0B07;font-size:16px'></i>"
         "</div>"
-        "<span style='font-family:\"Space Grotesk\";font-weight:600;font-size:14px;color:#C8BFA8'>SecurCoach AI</span>"
+        "<span class='sidebar-logo-text'>SecurCoach AI</span>"
         "</div>",
         unsafe_allow_html=True
     )
-    st.markdown(f"<p style='font-family:\"Space Grotesk\";font-size:9px;color:var(--color-text-faint);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px'>{html_lib.escape(user_email)}</p>", unsafe_allow_html=True)
 
     # Page navigation
     active_page = st.radio(
@@ -240,10 +265,9 @@ with st.sidebar:
         llm_engine.MODEL_NAMES,
         index=llm_engine.MODEL_NAMES.index(st.session_state.selected_model) 
               if st.session_state.selected_model in llm_engine.MODEL_NAMES else 0,
-        help="Switch between different Groq-hosted models.",
+        help="Switch between different models.",
     )
-    st.markdown(f"<small style='color:var(--text3)'>{llm_engine.MODELS[st.session_state.selected_model]['desc']}</small>", unsafe_allow_html=True)
-
+    
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
     # Lab Mode Toggle
@@ -279,6 +303,19 @@ with st.sidebar:
         q = search_query.strip().lower()
         summaries = [s for s in summaries if q in s.get("title", "").lower()]
     current_cid = st.session_state.current_conversation_id
+
+    # Sidebar Footer: Initials Avatar
+    st.markdown("<div style='margin-top:auto;padding-top:20px;border-top:0.5px solid var(--color-border-default)'></div>", unsafe_allow_html=True)
+    initials = "".join([n[0] for n in user_email.split("@")[0].split(".") if n])[:2].upper() or "MR"
+    st.markdown(
+        f"<div style='display:flex;align-items:center;gap:10px;padding:4px 2px'>"
+        f"<div style='width:28px;height:28px;border-radius:50%;background:#1A1508;border:0.5px solid rgba(193,148,60,0.3);display:flex;align-items:center;justify-content:center;font-family:\"Space Grotesk\";font-size:10px;font-weight:500;color:#C1943C'>"
+        f"{initials}</div>"
+        f"<div style='font-family:\"Space Grotesk\";font-size:9px;color:var(--color-text-faint);text-transform:uppercase;letter-spacing:0.05em'>"
+        f"Session Active</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
     if summaries:
         grouped = _group_conversations(summaries)

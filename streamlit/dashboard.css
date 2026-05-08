@@ -85,19 +85,39 @@ h2 { font-size: 18px !important; }
 section[data-testid="stSidebar"] {
     background: var(--color-bg-input) !important;
     border-right: 0.5px solid var(--color-border-default) !important;
-    width: 176px !important;
-    min-width: 176px !important;
+    width: 220px !important;
+    min-width: 220px !important;
     padding: 16px 12px !important;
+    flex-shrink: 0 !important;
 }
 section[data-testid="stSidebar"] * { color: var(--color-text-primary) !important; }
 
-/* ── Topbar / Header ── */
+.sidebar-logo-text {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 13px !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-weight: 600 !important;
+    color: #C8BFA8 !important;
+}
+
+/* ── Dropdowns clipping ── */
+div[data-testid="stSelectbox"] select {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+}
+
+/* ── Topbar ── */
 header[data-testid="stHeader"] {
     background: var(--color-bg-base) !important;
     border-bottom: 0.5px solid var(--color-border-default) !important;
     height: 48px !important;
 }
-.hero-header { display: none !important; } /* Replaced by proper topbar if possible, hiding old hero */
 
 /* ── Chat Messages ── */
 .msg-user, .msg-ai {
@@ -131,7 +151,7 @@ header[data-testid="stHeader"] {
     display: block;
     background: #101420 !important;
     border: 0.5px solid #1C1A28 !important;
-    border-left: 2px solid var(--color-gold-strong) !important;
+    border-left: 2px solid #C1943C !important; /* AMBER GOLD - non-negotiable */
     border-radius: 0 8px 8px 0 !important;
     padding: 14px 16px !important;
     margin-right: 0 !important;
@@ -160,118 +180,7 @@ code { font-family: 'JetBrains Mono', monospace !important; font-size: 12px !imp
 pre  { background: rgba(0,0,0,0.3) !important; border: 0.5px solid var(--color-border-default) !important;
        border-radius: 6px !important; padding: 16px !important; overflow-x: auto !important; }
 
-/* ── Inputs ── */
-div[data-testid="stTextInput"] input,
-div[data-testid="stChatInput"] textarea {
-    background: var(--color-bg-base) !important;
-    border: 0.5px solid var(--color-border-default) !important;
-    border-radius: 6px !important;
-    color: var(--color-text-primary) !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 13px !important;
-    padding: 0 12px !important;
-    box-shadow: none !important;
-    transition: border-color 150ms ease !important;
-}
-
-div[data-testid="stChatInput"] {
-    background: var(--color-bg-input) !important;
-    border-top: 0.5px solid var(--color-border-default) !important;
-    padding: 10px 16px !important;
-}
-div[data-testid="stChatInput"] textarea {
-    border-radius: 6px !important;
-    padding: 10px 12px !important;
-}
-
-/* ── Buttons ── */
-div[data-testid="stButton"] > button {
-    background: var(--color-bg-elevated) !important;
-    border: 0.5px solid var(--color-border-default) !important;
-    color: var(--color-text-muted) !important;
-    border-radius: 6px !important;
-    font-family: 'Space Grotesk', sans-serif !important;
-    font-weight: 500 !important;
-    font-size: 12px !important;
-    height: 36px !important;
-    transition: background 120ms ease, color 120ms ease !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
-}
-div[data-testid="stButton"] > button:hover {
-    background: var(--color-bg-hover) !important;
-    border-color: var(--color-border-warm) !important;
-    color: var(--color-gold-dim) !important;
-    transform: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
-}
-
-/* ── Banners & Chips ── */
-.domain-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--color-gold-strong);
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-.domain-chip::before {
-    content: '';
-    display: block;
-    width: 5px;
-    height: 5px;
-    background: var(--color-gold-strong);
-    border-radius: 50%;
-}
-.lab-chip {
-    background: var(--color-info-bg);
-    border: 0.5px solid var(--color-info-border);
-    color: var(--color-info-text);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    margin-left: 8px;
-    animation: none !important;
-    box-shadow: none !important;
-}
-
-/* ── Stat Cards & Quizzes ── */
-.stat-card, .quiz-score-card, .quiz-question {
-    background: var(--color-bg-base) !important;
-    border: 0.5px solid var(--color-border-default) !important;
-    border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
-    transition: opacity 200ms ease, transform 200ms ease !important;
-    transform: none !important;
-}
-.stat-card:hover, .quiz-score-card:hover, .quiz-question:hover {
-    transform: none !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
-}
-
-.err-banner {
-    background: var(--color-danger-bg);
-    border: 0.5px solid var(--color-danger-border);
-    color: var(--color-danger-text);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 13px;
-}
-.ctx-warning {
-    background: var(--color-warn-bg);
-    border: 0.5px solid var(--color-warn-border);
-    color: var(--color-warn-text);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 13px;
-}
-
-/* ── Radio / Page Nav ── */
+/* ── Radio / Page Nav (Active nav state) ── */
 div[data-testid="stRadio"] > div {
     background: transparent !important;
     border: none !important;
@@ -288,13 +197,49 @@ div[data-testid="stRadio"] label {
     align-items: center !important;
     border-radius: 6px !important;
     transition: background 120ms, color 120ms !important;
+    position: relative;
+}
+/* REMOVE ALL DOTS/CIRCLES/INDICATORS */
+div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"]::before,
+div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"]::after,
+div[data-testid="stRadio"] label::before,
+div[data-testid="stRadio"] label::after {
+    display: none !important;
+    content: none !important;
 }
 div[data-testid="stRadio"] label:hover {
     background: #141920 !important;
     color: #9A8F78 !important;
 }
 div[data-testid="stRadio"] label[data-checked="true"] {
-    background: var(--color-bg-active) !important;
-    color: var(--color-gold-strong) !important;
+    background: #1A1508 !important;
+    color: #C1943C !important;
     box-shadow: none !important;
+}
+div[data-testid="stRadio"] label[data-checked="true"] * {
+    color: #C1943C !important;
+}
+
+/* ── Section headers ── */
+.response-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--color-gold-text);
+    letter-spacing: 0.03em;
+}
+.think-block {
+    background: #10161F;
+    border: 0.5px solid rgba(59,139,212,0.15);
+    border-radius: 5px;
+    padding: 9px 12px;
+    margin-top: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #4A7A9A;
+    line-height: 1.6;
 }

@@ -15,15 +15,15 @@ import config
 MODELS: dict[str, dict] = {
     "Llama 3.3 70B": {
         "id": "llama-3.3-70b-versatile",
-        "desc": "Most capable — best for complex topics",
+        "desc": "",
     },
     "Llama 3.1 8B": {
         "id": "llama-3.1-8b-instant",
-        "desc": "Fast — good for quick questions",
+        "desc": "",
     },
     "Mixtral 8x7B": {
         "id": "mixtral-8x7b-32768",
-        "desc": "Balanced — 32K context window",
+        "desc": "",
     },
 }
 
@@ -42,7 +42,7 @@ _OUTPUT_FORMAT = (
     "\n\nAlways structure your response using these sections:\n"
     "## Answer\n[Your main explanation]\n\n"
     "## Example\n[A practical code snippet, command, or scenario — never skip this]\n\n"
-    "## \U0001f914 Think About This\n[One follow-up question to deepen understanding]\n\n"
+    "## Think About This\n[One follow-up question to deepen understanding]\n\n"
     "Format all code blocks with proper language-tagged fences (```python, ```bash, etc.).\n"
     "Keep responses thorough but focused. Never give vague answers — always be specific and actionable."
 )
