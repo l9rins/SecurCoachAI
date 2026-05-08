@@ -141,12 +141,12 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
     safe_content = msg["content"]
     
     target = container or st
-    # Render header and body inside the same styled container
+    # We wrap the entire message in the styled div. 
+    # To support markdown inside, we use a single markdown call with the HTML wrapper.
     target.markdown(
-        f'<div class="{cls}"><div class="msg-meta">{label} · {safe_ts}</div></div>',
+        f'<div class="{cls}"><div class="msg-meta">{label} · {safe_ts}</div>\n\n{safe_content}\n\n</div>',
         unsafe_allow_html=True,
     )
-    target.markdown(safe_content)
 
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
@@ -411,9 +411,11 @@ if prompt:
     st.session_state.is_generating = True
     st.session_state.stop_generation = False
     is_first_exchange = not st.session_state.conv_title_set and len(st.session_state.messages) <= 2
-    ai_placeholder = st.empty()
-    stop_col, _ = st.columns([1, 5])
-    stop_btn_holder = stop_col.empty()
+    
+    with chat_container:
+        ai_placeholder = st.empty()
+        stop_col, _ = st.columns([1, 5])
+        stop_btn_holder = stop_col.empty()
     full_response   = ""
 
     try:
@@ -429,10 +431,9 @@ if prompt:
                 # Use a container to render header (HTML) and body (Markdown) separately
                 with ai_placeholder.container():
                     st.markdown(
-                        f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div></div>',
+                        f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>\n\n{buffer}▌\n\n</div>',
                         unsafe_allow_html=True,
                     )
-                    st.markdown(f"{buffer}▌")
                 
                 # Show stop button during generation
                 with stop_btn_holder:
