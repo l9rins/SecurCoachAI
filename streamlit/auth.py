@@ -90,35 +90,51 @@ def apply_query_auth() -> None:
     """
     Authenticate via ?token=<jwt> in the URL.
     Only accepts a properly signed JWT — no plain-text email bypass.
+    
+    Flow:
+    1. Check if token in URL
+    2. If yes and not yet processed: verify JWT → store in session → remove token → trigger rerun
+    3. If yes and already processed: do nothing (rerun will skip this)
     """
     params = st.query_params
     token = params.get("token", "").strip()
+    
     if not token:
         return
     
-    # Prevent infinite redirect loops on Streamlit Cloud
+    # If we've already processed this token in a previous run, skip
     if st.session_state.get("processed_token") == token:
-        # If the token is still in the URL but we've processed it, try to remove it once more
-        if "token" in params:
-            try:
-                del st.query_params["token"]
-            except Exception:
-                pass
+        logger.debug("Token already processed in previous run, skipping.")
         return
-
+    
+    logger.info(f"Token received in URL")
+    
+    # Verify the JWT
     email = verify_jwt(token)
-    if email:
-        st.session_state.is_authenticated = True
-        st.session_state.auth_user_email = email
-        st.session_state.conversation_loaded = False
-        st.session_state["processed_token"] = token
-        
-        # Target only the token for removal to avoid clearing other potential state
-        if "token" in st.query_params:
-            try:
-                del st.query_params["token"]
-            except Exception as e:
-                logger.warning(f"Failed to remove token from URL: {e}")
+    if not email:
+        logger.warning("Token verification failed")
+        return
+    
+    logger.info(f"Token verified for email: {email}")
+    
+    # Store authentication state
+    st.session_state.is_authenticated = True
+    st.session_state.auth_user_email = email
+    st.session_state.conversation_loaded = False
+    st.session_state["processed_token"] = token
+    
+    # Remove token from URL to prevent re-processing on rerun
+    try:
+        del st.query_params["token"]
+        logger.info("Token removed from URL")
+    except Exception as e:
+        logger.error(f"Failed to remove token from URL: {e}")
+        # If removal fails, at least we have processed_token set to prevent loops
+        return
+    
+    # Trigger rerun to show authenticated app without token in URL
+    logger.info("Triggering rerun to show authenticated app")
+    st.rerun()
 
 
 def get_user_email() -> str:

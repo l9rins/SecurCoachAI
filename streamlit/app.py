@@ -375,14 +375,13 @@ if st.session_state.active_page == "📊 Progress":
 
 # ── Topbar ────────────────────────────────────────────────────────────────────
 st.markdown(
-    f"<header style='display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:0.5px solid var(--color-border-default);background:var(--color-bg-base);margin:-1rem -1rem 1rem -1rem'>"
-    f"<div style='display:flex;align-items:center;gap:6px'>"
-    f"<div style='width:5px;height:5px;background:#C1943C;border-radius:50%'></div>"
-    f"<span style='font-family:\"Space Grotesk\";font-weight:500;font-size:12px;color:#C1943C'>{html_lib.escape(st.session_state.selected_domain)}</span>"
+    f"<header style='display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 var(--spacing-xl);border-bottom:0.5px solid var(--color-border);background:var(--color-surface);margin:-1rem -1rem 1rem -1rem'>"
+    f"<div style='display:flex;align-items:center;gap:var(--spacing-base)'>"
+    f"<span style='font-family:var(--font-heading);font-weight:600;font-size:12px;color:var(--color-accent-gold);text-transform:uppercase;letter-spacing:0.05em'>{html_lib.escape(st.session_state.selected_domain)}</span>"
     f"</div>"
-    f"<div style='display:flex;align-items:center;gap:5px'>"
-    f"<i class='ph ph-cpu' style='font-size:12px;color:var(--color-text-faint)'></i>"
-    f"<span style='font-family:\"Space Grotesk\";font-weight:500;font-size:10px;color:var(--color-text-faint)'>{html_lib.escape(st.session_state.selected_model)}</span>"
+    f"<div style='display:flex;align-items:center;gap:var(--spacing-sm)'>"
+    f"<i class='ph ph-cpu' style='font-size:13px;color:var(--color-text-muted)'></i>"
+    f"<span style='font-family:var(--font-heading);font-weight:500;font-size:11px;color:var(--color-text-muted)'>{html_lib.escape(st.session_state.selected_model)}</span>"
     f"</div>"
     f"</header>", 
     unsafe_allow_html=True

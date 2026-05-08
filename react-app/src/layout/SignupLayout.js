@@ -76,14 +76,17 @@ export default function SignupLayout({ onSwitchToLogin }) {
       <div className="auth-root">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="auth-shield">✉️</span>
-            <h1 className="auth-title">Check your email</h1>
-            <p className="auth-subtitle">
-              We sent a confirmation link to <strong>{form.email}</strong>.
-              Click it, then come back to sign in.
-            </p>
+            <div className="brand-logo"><i className="ph ph-envelope"></i></div>
+            <div className="brand-text">
+              <span className="brand-name" style={{ fontSize: '18px' }}>Check your email</span>
+            </div>
           </div>
-          <button className="auth-btn" onClick={onSwitchToLogin}>
+          <div className="auth-divider"></div>
+          <p className="auth-subtitle">
+            We sent a confirmation link to <strong>{form.email}</strong>.
+            Click it to verify your email, then come back to sign in.
+          </p>
+          <button className="auth-btn" onClick={onSwitchToLogin} aria-label="Return to login">
             Go to Sign in
           </button>
         </div>
@@ -95,10 +98,15 @@ export default function SignupLayout({ onSwitchToLogin }) {
     <div className="auth-root">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-shield">🛡️</span>
-          <h1 className="auth-title">Create account</h1>
-          <p className="auth-subtitle">Start your cybersecurity journey</p>
+          <div className="brand-logo"><i className="ph ph-shield"></i></div>
+          <div className="brand-text">
+            <span className="brand-name">SecurCoach AI</span>
+            <span className="brand-tagline">Cybersecurity Training</span>
+          </div>
         </div>
+        <div className="auth-divider"></div>
+        <h1 className="auth-title">Create account</h1>
+        <p className="auth-subtitle">Start your cybersecurity journey</p>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           {apiError && (
@@ -119,8 +127,9 @@ export default function SignupLayout({ onSwitchToLogin }) {
                 onChange={(e) => update("name", e.target.value)}
                 autoComplete="name"
                 disabled={loading}
+                aria-describedby={errors.name ? "name-error" : undefined}
               />
-              {errors.name && <span className="field-error">{errors.name}</span>}
+              {errors.name && <span id="name-error" className="field-error">{errors.name}</span>}
             </div>
 
             <div className="field-group">
@@ -134,13 +143,14 @@ export default function SignupLayout({ onSwitchToLogin }) {
                 onChange={(e) => update("username", e.target.value)}
                 autoComplete="username"
                 disabled={loading}
+                aria-describedby={errors.username ? "username-error" : undefined}
               />
-              {errors.username && <span className="field-error">{errors.username}</span>}
+              {errors.username && <span id="username-error" className="field-error">{errors.username}</span>}
             </div>
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="su-email">Email</label>
+            <label className="field-label" htmlFor="su-email">Email Address</label>
             <input
               id="su-email"
               className={`field-input${errors.email ? " field-input--error" : ""}`}
@@ -150,8 +160,9 @@ export default function SignupLayout({ onSwitchToLogin }) {
               onChange={(e) => update("email", e.target.value)}
               autoComplete="email"
               disabled={loading}
+              aria-describedby={errors.email ? "email-error" : undefined}
             />
-            {errors.email && <span className="field-error">{errors.email}</span>}
+            {errors.email && <span id="email-error" className="field-error">{errors.email}</span>}
           </div>
 
           <div className="field-row">
@@ -166,12 +177,13 @@ export default function SignupLayout({ onSwitchToLogin }) {
                 onChange={(e) => update("password", e.target.value)}
                 autoComplete="new-password"
                 disabled={loading}
+                aria-describedby={errors.password ? "password-error" : undefined}
               />
-              {errors.password && <span className="field-error">{errors.password}</span>}
+              {errors.password && <span id="password-error" className="field-error">{errors.password}</span>}
             </div>
 
             <div className="field-group">
-              <label className="field-label" htmlFor="confirm">Confirm</label>
+              <label className="field-label" htmlFor="confirm">Confirm password</label>
               <input
                 id="confirm"
                 className={`field-input${errors.confirm ? " field-input--error" : ""}`}
@@ -181,12 +193,13 @@ export default function SignupLayout({ onSwitchToLogin }) {
                 onChange={(e) => update("confirm", e.target.value)}
                 autoComplete="new-password"
                 disabled={loading}
+                aria-describedby={errors.confirm ? "confirm-error" : undefined}
               />
-              {errors.confirm && <span className="field-error">{errors.confirm}</span>}
+              {errors.confirm && <span id="confirm-error" className="field-error">{errors.confirm}</span>}
             </div>
           </div>
 
-          <button className="auth-btn" type="submit" disabled={loading}>
+          <button className="auth-btn" type="submit" disabled={loading} aria-label="Create new account">
             {loading ? (
               <span className="auth-btn-inner">
                 <span className="spinner" /> Creating account…
@@ -199,7 +212,7 @@ export default function SignupLayout({ onSwitchToLogin }) {
 
         <p className="auth-switch">
           Already have an account?{" "}
-          <button className="link-btn" onClick={onSwitchToLogin} disabled={loading}>
+          <button className="link-btn" onClick={onSwitchToLogin} disabled={loading} aria-label="Switch to login">
             Sign in
           </button>
         </p>

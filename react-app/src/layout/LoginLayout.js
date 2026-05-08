@@ -72,16 +72,20 @@ export default function LoginLayout({ onSwitchToSignup }) {
       <div className="auth-root">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="auth-shield">✉️</span>
-            <h1 className="auth-title">Check your email</h1>
-            <p className="auth-subtitle">
-              We sent a password reset link to <strong>{form.email}</strong>.
-              Follow the link to reset your password, then come back to sign in.
-            </p>
+            <div className="brand-logo"><i className="ph ph-envelope"></i></div>
+            <div className="brand-text">
+              <span className="brand-name" style={{ fontSize: '18px' }}>Check your email</span>
+            </div>
           </div>
+          <div className="auth-divider"></div>
+          <p className="auth-subtitle">
+            We sent a password reset link to <strong>{form.email}</strong>.
+            Follow the link to reset your password, then come back to sign in.
+          </p>
           <button
             className="auth-btn"
             onClick={() => { setResetSent(false); setForgotMode(false); }}
+            aria-label="Return to login"
           >
             Back to Sign in
           </button>
@@ -98,33 +102,33 @@ export default function LoginLayout({ onSwitchToSignup }) {
           <div className="auth-brand">
             <div className="brand-logo"><i className="ph ph-shield"></i></div>
             <div className="brand-text">
-                <span className="brand-name">SecurCoach AI</span>
-                <span className="brand-tagline">Cybersecurity Training</span>
+              <span className="brand-name">SecurCoach AI</span>
+              <span className="brand-tagline">Cybersecurity Training</span>
             </div>
           </div>
           <div className="auth-divider"></div>
-          <h1 className="auth-title" style={{ display: 'none' }}>Login</h1>
-            <p className="auth-subtitle">Enter your email and we'll send a reset link</p>
-          </div>
+          <h1 className="auth-title">Reset Password</h1>
+          <p className="auth-subtitle">Enter your email and we'll send a reset link</p>
           <form className="auth-form" onSubmit={handleForgotPassword} noValidate>
             {apiError && (
               <div className="auth-error" role="alert">{apiError}</div>
             )}
             <div className="field-group">
-              <label className="field-label" htmlFor="reset-email">Email</label>
+              <label className="field-label" htmlFor="reset-email">Email Address</label>
               <input
                 id="reset-email"
                 className={`field-input${errors.email ? " field-input--error" : ""}`}
                 type="email"
-                placeholder="you@example.com"
+                placeholder="name@company.com"
                 value={form.email}
                 onChange={(e) => update("email", e.target.value)}
                 autoComplete="email"
                 disabled={loading}
+                aria-describedby={errors.email ? "reset-email-error" : undefined}
               />
-              {errors.email && <span className="field-error">{errors.email}</span>}
+              {errors.email && <span id="reset-email-error" className="field-error">{errors.email}</span>}
             </div>
-            <button className="auth-btn" type="submit" disabled={loading}>
+            <button className="auth-btn" type="submit" disabled={loading} aria-label="Send password reset link">
               {loading ? (
                 <span className="auth-btn-inner">
                   <span className="spinner" /> Sending…
@@ -133,7 +137,7 @@ export default function LoginLayout({ onSwitchToSignup }) {
             </button>
           </form>
           <p className="auth-switch">
-            <button className="link-btn" onClick={() => setForgotMode(false)}>
+            <button className="link-btn" onClick={() => setForgotMode(false)} aria-label="Return to login">
               Back to Sign in
             </button>
           </p>
@@ -148,18 +152,19 @@ export default function LoginLayout({ onSwitchToSignup }) {
         <div className="auth-brand">
           <div className="brand-logo"><i className="ph ph-shield"></i></div>
           <div className="brand-text">
-              <span className="brand-name">SecurCoach AI</span>
-              <span className="brand-tagline">Cybersecurity Training</span>
+            <span className="brand-name">SecurCoach AI</span>
+            <span className="brand-tagline">Cybersecurity Training</span>
           </div>
         </div>
         <div className="auth-divider"></div>
 
-        {apiError && <div className="auth-error">{apiError}</div>}
+        {apiError && <div className="auth-error" role="alert">{apiError}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="field-group">
-            <label className="field-label">Email Address</label>
+            <label className="field-label" htmlFor="login-email">Email Address</label>
             <input
+              id="login-email"
               className={`field-input ${errors.email ? "field-input--error" : ""}`}
               type="email"
               placeholder="name@company.com"
@@ -167,13 +172,15 @@ export default function LoginLayout({ onSwitchToSignup }) {
               onChange={(e) => update("email", e.target.value)}
               disabled={loading}
               autoComplete="email"
+              aria-describedby={errors.email ? "email-error" : undefined}
             />
-            {errors.email && <div className="field-error">{errors.email}</div>}
+            {errors.email && <div id="email-error" className="field-error">{errors.email}</div>}
           </div>
 
           <div className="field-group">
-            <label className="field-label">Password</label>
+            <label className="field-label" htmlFor="login-password">Password</label>
             <input
+              id="login-password"
               className={`field-input ${errors.password ? "field-input--error" : ""}`}
               type="password"
               placeholder="••••••••"
@@ -181,19 +188,28 @@ export default function LoginLayout({ onSwitchToSignup }) {
               onChange={(e) => update("password", e.target.value)}
               disabled={loading}
               autoComplete="current-password"
+              aria-describedby={errors.password ? "password-error" : undefined}
             />
-            {errors.password && <div className="field-error">{errors.password}</div>}
+            {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
           </div>
 
-          <button className="auth-btn" type="submit" disabled={loading}>
-            {loading ? <span className="spinner"></span> : "Sign in"}
+          <button className="auth-btn" type="submit" disabled={loading} aria-label="Sign in to SecurCoach AI">
+            {loading ? (
+              <span className="auth-btn-inner">
+                <span className="spinner"></span> Signing in…
+              </span>
+            ) : "Sign in"}
           </button>
         </form>
 
         <div className="auth-footer">
-          <button className="link-btn secondary" onClick={() => setForgotMode(true)}>Forgot password</button>
-          <span style={{ color: '#2A2520' }}>·</span>
-          <button className="link-btn" onClick={onSwitchToSignup}>Create account</button>
+          <button className="link-btn secondary" onClick={() => setForgotMode(true)} aria-label="Forgot your password?">
+            Forgot password
+          </button>
+          <span style={{ color: 'var(--color-border)' }}>·</span>
+          <button className="link-btn" onClick={onSwitchToSignup} aria-label="Create a new account">
+            Create account
+          </button>
         </div>
 
         <div className="security-badge">
