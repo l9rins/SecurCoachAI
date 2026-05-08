@@ -20,6 +20,8 @@ except RuntimeError as _cfg_err:
 import auth
 import db
 import chat
+import quiz
+import progress
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -52,6 +54,7 @@ def _init_state() -> None:
     st.session_state.setdefault("current_conv_title", "conversation")
     st.session_state.setdefault("stop_generation", False)
     st.session_state.setdefault("search_query", "")
+    st.session_state.setdefault("active_page", "💬 Chat")
 
     user_id = auth.get_user_email()
     if st.session_state.is_authenticated and user_id:
@@ -170,6 +173,17 @@ user_email = auth.get_user_email()
 with st.sidebar:
     st.markdown("## 🛡️ SecurCoach AI")
     st.markdown(f"<small style='color:var(--text3)'>{html_lib.escape(user_email)}</small>", unsafe_allow_html=True)
+
+    # Page navigation
+    active_page = st.radio(
+        "Navigate",
+        ["💬 Chat", "📝 Quiz", "📊 Progress"],
+        index=["💬 Chat", "📝 Quiz", "📊 Progress"].index(st.session_state.active_page)
+              if st.session_state.active_page in ["💬 Chat", "📝 Quiz", "📊 Progress"] else 0,
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+    st.session_state.active_page = active_page
     st.divider()
 
     # Domain selector
@@ -284,7 +298,16 @@ with st.sidebar:
             use_container_width=True,
         )
 
-# ── Main area ─────────────────────────────────────────────────────────────────
+# ── Page dispatch ─────────────────────────────────────────────────────────────
+if st.session_state.active_page == "📝 Quiz":
+    quiz.render_quiz(user_email)
+    st.stop()
+
+if st.session_state.active_page == "📊 Progress":
+    progress.render_progress(user_email)
+    st.stop()
+
+# ── Chat page ─────────────────────────────────────────────────────────────────
 header_col, chip_col = st.columns([6, 2])
 with header_col:
     st.markdown("# SecurCoach AI")

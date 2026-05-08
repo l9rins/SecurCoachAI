@@ -162,3 +162,91 @@ h2, h3 { font-family: 'Syne', sans-serif !important; font-weight: 700 !important
 
 /* ── Divider ── */
 hr { border-color: var(--border) !important; margin: .75rem 0 !important; }
+
+/* ── Quiz styles ── */
+.quiz-question {
+    padding: 10px 14px;
+    background: var(--elevated);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    border-left: 3px solid var(--accent);
+}
+.quiz-prev-score {
+    padding: 8px 14px;
+    background: rgba(126,184,176,.08);
+    border: 1px solid rgba(126,184,176,.2);
+    border-radius: 8px;
+    font-size: .85rem;
+    color: var(--text2);
+}
+.quiz-explanation {
+    padding: 8px 14px;
+    margin: 4px 0 14px 1.5rem;
+    background: rgba(224,112,112,.06);
+    border-left: 2px solid var(--danger);
+    border-radius: 0 6px 6px 0;
+    font-size: .85rem;
+    color: var(--text2);
+}
+.quiz-explanation.correct {
+    background: rgba(126,184,176,.06);
+    border-left-color: var(--accent2);
+}
+.quiz-score-card {
+    text-align: center;
+    padding: 2rem 1rem;
+    margin: 1rem 0;
+    background: var(--elevated);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+.quiz-score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.quiz-score-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: .5rem;
+}
+
+/* ── Progress styles ── */
+.progress-domain-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .88rem;
+    color: var(--text1);
+    margin-bottom: 4px;
+    padding: 0 2px;
+}
+.progress-score-label {
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .78rem;
+}
+
+/* ── Stat cards ── */
+.stat-card {
+    text-align: center;
+    padding: 1.2rem .8rem;
+    background: var(--elevated);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+.stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+.stat-label {
+    font-size: .75rem;
+    color: var(--text3);
+    margin-top: 4px;
+}
+
+/* ── Page nav ── */
+div[data-testid="stRadio"] > div { gap: 0 !important; }

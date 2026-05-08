@@ -97,8 +97,11 @@ SecurCoachAI/
 │   ├── app.py                   # Main dashboard — UI, chat loop, session state
 │   ├── auth.py                  # JWT verification, session helpers, auth guard
 │   ├── chat.py                  # Groq client, streaming, title generation, lab mode
-│   ├── db.py                    # All Supabase REST calls (conversations, messages)
-│   └── config.py                # Secrets loader + startup validation
+│   ├── quiz.py                  # Skill assessment quiz (30 questions, 6 domains)
+│   ├── progress.py              # Progress dashboard & learning paths
+│   ├── db.py                    # All Supabase REST calls (conversations, quiz, progress)
+│   ├── config.py                # Secrets loader + startup validation
+│   └── dashboard.css            # External CSS with unified design tokens
 │
 ├── .streamlit/
 │   └── secrets.toml.example     # Copy to secrets.toml and fill in your keys
@@ -283,6 +286,64 @@ create policy "Users delete own messages"
   using (user_id = (auth.jwt() ->> 'email'));
 ```
 
+### `quiz_results` table
+
+Stores best quiz score per user per domain.
+
+```sql
+create table quiz_results (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    text        not null,
+  domain     text        not null,
+  score      integer     not null,
+  total      integer     not null default 5,
+  created_at timestamptz default now()
+);
+
+alter table quiz_results enable row level security;
+
+create policy "Users see own quiz results"
+  on quiz_results for select
+  using (user_id = (auth.jwt() ->> 'email'));
+
+create policy "Users insert own quiz results"
+  on quiz_results for insert
+  with check (user_id = (auth.jwt() ->> 'email'));
+
+create policy "Users delete own quiz results"
+  on quiz_results for delete
+  using (user_id = (auth.jwt() ->> 'email'));
+```
+
+### `completed_topics` table
+
+Tracks learning path topic completions.
+
+```sql
+create table completed_topics (
+  id           uuid        primary key default gen_random_uuid(),
+  user_id      text        not null,
+  domain       text        not null,
+  topic_id     text        not null,
+  completed_at timestamptz default now(),
+  unique(user_id, topic_id)
+);
+
+alter table completed_topics enable row level security;
+
+create policy "Users see own completions"
+  on completed_topics for select
+  using (user_id = (auth.jwt() ->> 'email'));
+
+create policy "Users insert own completions"
+  on completed_topics for insert
+  with check (user_id = (auth.jwt() ->> 'email'));
+
+create policy "Users delete own completions"
+  on completed_topics for delete
+  using (user_id = (auth.jwt() ->> 'email'));
+```
+
 ### A note on RLS and the service role key
 
 The Streamlit backend connects using the **service role key**, which bypasses RLS entirely. This is intentional — the backend is a trusted server process that already enforces data isolation by filtering every query with `&user_id=eq.{email}` before it hits the database.
@@ -384,8 +445,22 @@ Navigate to **http://localhost:3000** — always start from the React login page
 - ✅ Lab-specific suggested challenges shown on empty chat
 - ✅ Visual `🧪 Lab` chip badge in the header when active
 
+### 📝 Skill Assessment Quiz
+- ✅ 30 verified cybersecurity questions (5 per domain) with explanations
+- ✅ Multiple-choice format with instant grading
+- ✅ Score card with percentage and grade (Excellent / Good / Needs Practice)
+- ✅ Per-question feedback showing correct answers and explanations for wrong answers
+- ✅ Best scores saved to Supabase — retake quizzes to improve
+
+### 📊 Progress Dashboard
+- ✅ Quiz score progress bars for all 6 domains
+- ✅ 30 structured learning path topics (5 per domain) with Learn and Practice actions
+- ✅ Topic completion tracking with undo support
+- ✅ Activity summary stats (conversations, messages, quizzes, topics)
+- ✅ Learn button starts a guided chat; Practice button opens a lab challenge
+
 ### Code Quality
-- ✅ `app.py` split into four focused modules (`auth`, `db`, `chat`, `config`)
+- ✅ `app.py` split into six focused modules (`auth`, `db`, `chat`, `config`, `quiz`, `progress`)
 - ✅ Dashboard CSS extracted to external file (`dashboard.css`)
 - ✅ Unified design token palette between React auth and Streamlit dashboard
 - ✅ Startup config validation — clear error message if any secret is missing
