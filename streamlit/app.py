@@ -419,6 +419,11 @@ if prompt:
     full_response   = ""
 
     try:
+        # Show stop button once before starting the stream
+        with stop_btn_holder:
+            if st.button("⏹ Stop", key="stop_gen"):
+                st.session_state.stop_generation = True
+
         buffer = ""
         with st.spinner("🧠 Thinking..."):
             for chunk in llm_engine.stream_response(st.session_state.messages, request_title=is_first_exchange):
@@ -434,11 +439,6 @@ if prompt:
                         f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>\n\n{buffer}▌\n\n</div>',
                         unsafe_allow_html=True,
                     )
-                
-                # Show stop button during generation
-                with stop_btn_holder:
-                    if st.button("⏹ Stop", key="stop_gen"):
-                        st.session_state.stop_generation = True
 
         # Clear stop button
         stop_btn_holder.empty()
