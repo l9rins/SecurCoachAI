@@ -96,3 +96,12 @@ export async function getAccessToken() {
   const { data } = await supabase.auth.getSession();
   return data?.session?.access_token || null;
 }
+
+// ── Password reset ───────────────────────────────────────────────────────────
+
+export async function resetPassword(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase()
+  );
+  if (error) throw new Error(error.message);
+}

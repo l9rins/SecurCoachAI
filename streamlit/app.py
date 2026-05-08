@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, date, timedelta
 import time
 import html as html_lib
+import pathlib
 import streamlit as st
 
 # ── Validate config first ─────────────────────────────────────────────────────
@@ -29,145 +30,8 @@ st.set_page_config(
 )
 
 # ── Inject CSS ────────────────────────────────────────────────────────────────
-st.markdown(
-    """
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
-
-:root {
-    --bg:       #1a1d23;
-    --surface:  #22262e;
-    --elevated: #2a2f3a;
-    --border:   rgba(223,208,184,.1);
-    --accent:   #c9a96e;
-    --accent2:  #7eb8b0;
-    --text1:    #e8dfd0;
-    --text2:    rgba(232,223,208,.65);
-    --text3:    rgba(232,223,208,.35);
-    --danger:   #e07070;
-    --radius:   10px;
-}
-
-html, body, .stApp { background: var(--bg) !important; color: var(--text1) !important; font-family: 'Inter', sans-serif !important; }
-
-/* ── Sidebar ── */
-section[data-testid="stSidebar"] {
-    background: var(--surface) !important;
-    border-right: 1px solid var(--border) !important;
-}
-section[data-testid="stSidebar"] * { color: var(--text1) !important; }
-
-/* ── Chat messages ── */
-.msg-user, .msg-ai {
-    padding: 14px 18px;
-    border-radius: var(--radius);
-    margin-bottom: 12px;
-    font-size: .92rem;
-    line-height: 1.7;
-    position: relative;
-}
-.msg-user {
-    background: var(--elevated);
-    border-left: 3px solid var(--accent);
-    margin-left: 2rem;
-}
-.msg-ai {
-    background: rgba(126,184,176,.06);
-    border-left: 3px solid var(--accent2);
-    margin-right: 2rem;
-}
-.msg-meta {
-    font-size: .73rem;
-    color: var(--text3);
-    margin-bottom: 6px;
-    font-family: 'JetBrains Mono', monospace;
-}
-code { font-family: 'JetBrains Mono', monospace !important; font-size: .85em !important; }
-pre  { background: var(--bg) !important; border: 1px solid var(--border) !important;
-       border-radius: 6px !important; padding: 12px !important; overflow-x: auto !important; }
-
-/* ── Inputs ── */
-div[data-testid="stTextInput"] input,
-div[data-testid="stChatInput"] textarea {
-    background: var(--elevated) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    color: var(--text1) !important;
-    font-family: 'Inter', sans-serif !important;
-}
-div[data-testid="stTextInput"] input:focus,
-div[data-testid="stChatInput"] textarea:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 3px rgba(201,169,110,.15) !important;
-}
-
-/* ── Buttons ── */
-div[data-testid="stButton"] > button {
-    background: transparent !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text2) !important;
-    border-radius: 6px !important;
-    font-size: .82rem !important;
-    transition: all .15s !important;
-}
-div[data-testid="stButton"] > button:hover {
-    border-color: var(--accent) !important;
-    color: var(--accent) !important;
-}
-
-/* ── Selectbox ── */
-div[data-testid="stSelectbox"] > div > div {
-    background: var(--elevated) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text1) !important;
-    border-radius: var(--radius) !important;
-}
-
-/* ── Domain chips ── */
-.domain-chip {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: .75rem;
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    background: rgba(201,169,110,.08);
-    font-family: 'JetBrains Mono', monospace;
-}
-
-/* ── Error banner ── */
-.err-banner {
-    background: rgba(224,112,112,.12);
-    border: 1px solid rgba(224,112,112,.4);
-    border-radius: 8px;
-    padding: 10px 14px;
-    color: var(--danger);
-    font-size: .84rem;
-    margin-bottom: 12px;
-}
-
-/* ── Header ── */
-h1 { font-family: 'Syne', sans-serif !important; font-weight: 700 !important;
-     background: linear-gradient(90deg, var(--accent), var(--accent2));
-     -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important; }
-h2, h3 { font-family: 'Syne', sans-serif !important; font-weight: 700 !important; color: var(--text1) !important; }
-
-/* ── Rate limit ── */
-.rate-msg { font-size:.8rem; color: var(--text3); margin-top:4px; font-style: italic; }
-
-/* ── Export button special ── */
-.stDownloadButton > button {
-    background: rgba(126,184,176,.1) !important;
-    border-color: var(--accent2) !important;
-    color: var(--accent2) !important;
-}
-
-/* ── Divider ── */
-hr { border-color: var(--border) !important; margin: .75rem 0 !important; }
-</style>
-""",
-    unsafe_allow_html=True,
-)
+_CSS_PATH = pathlib.Path(__file__).parent / "dashboard.css"
+st.markdown(f"<style>{_CSS_PATH.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
 
 # ── Session state ─────────────────────────────────────────────────────────────
 
@@ -181,9 +45,13 @@ def _init_state() -> None:
     st.session_state.setdefault("pending_prompt", None)
     st.session_state.setdefault("is_generating", False)
     st.session_state.setdefault("selected_domain", chat.DOMAINS[0])
+    st.session_state.setdefault("selected_model", chat.DEFAULT_MODEL)
+    st.session_state.setdefault("lab_mode", False)
     st.session_state.setdefault("last_msg_time", 0.0)
     st.session_state.setdefault("conv_title_set", False)
     st.session_state.setdefault("current_conv_title", "conversation")
+    st.session_state.setdefault("stop_generation", False)
+    st.session_state.setdefault("search_query", "")
 
     user_id = auth.get_user_email()
     if st.session_state.is_authenticated and user_id:
@@ -267,16 +135,15 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
     label = "You" if role == "user" else "🛡️ SecurCoach"
     cls   = "msg-user" if role == "user" else "msg-ai"
     safe_ts = html_lib.escape(ts)
+    safe_content = msg["content"]
     
     target = container or st
-    # Render the header
+    # Render header and body inside the same styled container
     target.markdown(
         f'<div class="{cls}"><div class="msg-meta">{label} · {safe_ts}</div></div>',
         unsafe_allow_html=True,
     )
-    # Let Streamlit render markdown properly inside a container
-    with target.container():
-        target.markdown(msg["content"])
+    target.markdown(safe_content)
 
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
@@ -321,6 +188,28 @@ with st.sidebar:
             )
         st.session_state.selected_domain = new_domain
 
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+    # Model selector
+    st.markdown("**AI Model**")
+    new_model = st.selectbox(
+        "Model",
+        chat.MODEL_NAMES,
+        index=chat.MODEL_NAMES.index(st.session_state.selected_model) if st.session_state.selected_model in chat.MODEL_NAMES else 0,
+        format_func=lambda m: f"{m} ({chat.MODELS[m]['desc'].split(' — ')[0]})",
+        label_visibility="collapsed",
+    )
+    st.session_state.selected_model = new_model
+
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+
+    # Lab Mode Toggle
+    new_lab_mode = st.toggle("🧪 Hands-On Lab Mode", value=st.session_state.lab_mode)
+    if new_lab_mode != st.session_state.lab_mode:
+        st.session_state.lab_mode = new_lab_mode
+        if st.session_state.messages:
+            st.warning("Switched to Lab Mode. Start a new conversation to receive a fresh scenario.")
+
     st.divider()
 
     # New conversation
@@ -331,8 +220,21 @@ with st.sidebar:
 
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
+    # Conversation search
+    search_query = st.text_input(
+        "Search conversations",
+        value=st.session_state.get("search_query", ""),
+        placeholder="\U0001f50d Search...",
+        label_visibility="collapsed",
+        key="conv_search_input",
+    )
+    st.session_state.search_query = search_query
+
     # Conversation list
     summaries = st.session_state.get("conversation_summaries", [])
+    if search_query.strip():
+        q = search_query.strip().lower()
+        summaries = [s for s in summaries if q in s.get("title", "").lower()]
     current_cid = st.session_state.current_conversation_id
 
     if summaries:
@@ -387,12 +289,14 @@ header_col, chip_col = st.columns([6, 2])
 with header_col:
     st.markdown("# SecurCoach AI")
 with chip_col:
-    st.markdown(
+    chips_html = (
         f"<div style='padding-top:18px;text-align:right'>"
         f"<span class='domain-chip'>{html_lib.escape(st.session_state.selected_domain)}</span>"
-        f"</div>",
-        unsafe_allow_html=True,
     )
+    if st.session_state.lab_mode:
+        chips_html += " <span class='lab-chip'>🧪 Lab</span>"
+    chips_html += "</div>"
+    st.markdown(chips_html, unsafe_allow_html=True)
 
 # DB error banner
 db_err = db.get_error()
@@ -404,11 +308,12 @@ st.divider()
 
 # ── Suggested questions (when chat is empty) ──────────────────────────────────
 if not st.session_state.messages:
-    suggestions = chat.get_suggestions(st.session_state.selected_domain)
+    suggestions = chat.get_suggestions(st.session_state.selected_domain, lab_mode=st.session_state.lab_mode)
     if suggestions:
+        mode_label = "Lab challenges" if st.session_state.lab_mode else "Getting started"
         st.markdown(
             f"<p style='color:var(--text2);margin-bottom:12px'>"
-            f"Getting started with <strong style='color:var(--accent)'>"
+            f"{mode_label} with <strong style='color:var(--accent)'>"
             f"{st.session_state.selected_domain}</strong>:</p>",
             unsafe_allow_html=True,
         )
@@ -419,22 +324,41 @@ if not st.session_state.messages:
                     st.session_state.pending_prompt = q
                     st.rerun()
 
+    if st.session_state.lab_mode:
+        empty_hint = "Pick a challenge above — or describe what you want to practice."
+    else:
+        empty_hint = "Ask anything about cybersecurity — or pick a suggestion above."
     st.markdown(
-        "<div style='text-align:center;padding:3rem 0 1rem;"
-        "color:var(--text3);font-size:.9rem'>"
-        "Ask anything about cybersecurity — or pick a suggestion above.</div>",
+        f"<div style='text-align:center;padding:3rem 0 1rem;"
+        f"color:var(--text3);font-size:.9rem'>"
+        f"{empty_hint}</div>",
         unsafe_allow_html=True,
     )
 
 # ── Message history ───────────────────────────────────────────────────────────
 chat_container = st.container()
+
+# Context truncation warning
+if len(st.session_state.messages) > 20:
+    st.markdown(
+        '<div class="ctx-warning">' 
+        '⚠️ The AI is referencing your last 20 messages. '
+        'Earlier context in this conversation may not be available.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
 with chat_container:
     for msg in st.session_state.messages:
         _render_message(msg)
 
 # ── Chat input ────────────────────────────────────────────────────────────────
+if st.session_state.lab_mode:
+    _placeholder = f"Describe a {st.session_state.selected_domain.lower()} scenario to practice..."
+else:
+    _placeholder = f"Ask about {st.session_state.selected_domain.lower()}..."
 user_input = st.chat_input(
-    placeholder=f"Ask about {st.session_state.selected_domain.lower()}...",
+    placeholder=_placeholder,
     disabled=st.session_state.is_generating,
 )
 
@@ -465,13 +389,20 @@ if prompt:
 
     # ── Stream AI response ────────────────────────────────────────────────────
     st.session_state.is_generating = True
+    st.session_state.stop_generation = False
+    is_first_exchange = not st.session_state.conv_title_set and len(st.session_state.messages) <= 2
     ai_placeholder = st.empty()
+    stop_col, _ = st.columns([1, 5])
+    stop_btn_holder = stop_col.empty()
     full_response   = ""
 
     try:
-        stream = chat.stream_response(st.session_state.messages)
+        stream = chat.stream_response(st.session_state.messages, request_title=is_first_exchange)
         buffer = ""
         for chunk in stream:
+            # Check for stop
+            if st.session_state.get("stop_generation"):
+                break
             buffer += chunk
             full_response = buffer
             # Use a container to render header (HTML) and body (Markdown) separately
@@ -482,6 +413,13 @@ if prompt:
                     unsafe_allow_html=True,
                 )
                 st.markdown(f"{buffer}▌")
+            # Show stop button during generation
+            with stop_btn_holder:
+                if st.button("⏹ Stop", key="stop_gen"):
+                    st.session_state.stop_generation = True
+
+        # Clear stop button
+        stop_btn_holder.empty()
 
         # Final render without cursor
         if not full_response.strip():
@@ -509,6 +447,11 @@ if prompt:
         st.session_state.is_generating = False
 
     if full_response and not full_response.startswith("⚠️"):
+        # Extract inline title if this was the first exchange
+        extracted_title = None
+        if is_first_exchange:
+            full_response, extracted_title = chat.extract_title_from_response(full_response)
+
         # Save AI response
         ai_msg = {"role": "assistant", "content": full_response, "timestamp": now_ts}
         st.session_state.messages.append(ai_msg)
@@ -519,9 +462,9 @@ if prompt:
             full_response,
         )
 
-        # Generate AI title on first exchange
-        if not st.session_state.conv_title_set and len(st.session_state.messages) <= 2:
-            title = chat.generate_title(prompt)
+        # Set conversation title on first exchange
+        if is_first_exchange:
+            title = extracted_title or chat.generate_title(prompt)
             db.update_conversation_title(
                 user_email, st.session_state.current_conversation_id, title
             )

@@ -3,6 +3,10 @@ auth.py — JWT verification via PyJWT only. No insecure fallbacks.
 """
 from __future__ import annotations
 import html
+import time
+import logging
+
+logger = logging.getLogger(__name__)
 import streamlit as st
 
 try:
@@ -58,6 +62,10 @@ def verify_jwt(token: str) -> str | None:
             )
 
         email = payload.get("email", "")
+        # Store expiry for periodic re-validation
+        exp = payload.get("exp")
+        if exp:
+            st.session_state["jwt_exp"] = exp
         return email.lower().strip() if email else None
 
     except pyjwt.ExpiredSignatureError:
@@ -94,12 +102,20 @@ def apply_query_auth() -> None:
         # Remove token from URL after consuming it
         try:
             st.query_params.clear()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to clear token from URL: {e}. JWT may remain visible in browser address bar.")
 
 
 def get_user_email() -> str:
     return st.session_state.get("auth_user_email", "").strip().lower()
+
+
+def _is_session_expired() -> bool:
+    """Check if the JWT has expired since initial authentication."""
+    exp = st.session_state.get("jwt_exp")
+    if exp and time.time() > exp:
+        return True
+    return False
 
 
 def require_auth() -> bool:
@@ -123,4 +139,21 @@ def require_auth() -> bool:
             unsafe_allow_html=True,
         )
         return False
+
+    # Periodic JWT expiry re-check
+    if _is_session_expired():
+        st.session_state.is_authenticated = False
+        st.session_state.auth_user_email = ""
+        react_url = config.react_app_url()
+        safe_url = html.escape(react_url)
+        st.warning("Your session has expired. Please log in again.")
+        st.markdown(
+            f'<a href="{safe_url}" target="_self" '
+            f'style="display:inline-block;margin-top:.5rem;padding:.6rem 1.5rem;'
+            f'background:#948979;color:#222831;border-radius:8px;'
+            f'font-weight:600;text-decoration:none;">Go to Login</a>',
+            unsafe_allow_html=True,
+        )
+        return False
+
     return True

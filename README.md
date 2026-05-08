@@ -4,11 +4,13 @@
 
 **An AI-powered cybersecurity training coach — learn security concepts through real, streaming conversations.**
 
+> **Note:** This project uses **Groq** (with Llama 3.3 70B) for AI responses, **not** Google Gemini.
+
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20DB-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
-[![Gemini](https://img.shields.io/badge/Gemini-2.0%20Flash-4285F4?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
+[![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-F55036?style=flat-square&logo=meta&logoColor=white)](https://console.groq.com)
 
 </div>
 
@@ -39,10 +41,10 @@
 
 ## Overview
 
-SecurCoach AI is a full-stack cybersecurity learning platform that pairs a clean React authentication UI with a Streamlit AI chat dashboard. Users sign in via Supabase Auth, then get dropped into an interactive chat powered by **Google Gemini 2.0 Flash** — with streaming responses, persistent conversation history, AI-generated conversation titles, and domain-specific coaching across six security disciplines.
+SecurCoach AI is a full-stack cybersecurity learning platform that pairs a clean React authentication UI with a Streamlit AI chat dashboard. Users sign in via Supabase Auth, then get dropped into an interactive chat powered by **Llama 3.3 70B via Groq** — with streaming responses, persistent conversation history, AI-generated conversation titles, and domain-specific coaching across six security disciplines.
 
 ```
-User → React Login → Supabase Auth → JWT → Streamlit Dashboard → Gemini AI
+User → React Login → Supabase Auth → JWT → Streamlit Dashboard → Groq AI (Llama 3.3)
                                               ↕
                                         Supabase DB
                                      (chat history, profiles)
@@ -57,7 +59,7 @@ User → React Login → Supabase Auth → JWT → Streamlit Dashboard → Gemin
 | **Frontend** | React 19 + Supabase JS SDK | Authentication UI (login, signup, validation) |
 | **Backend** | Streamlit 1.35+ | AI chat dashboard, session management |
 | **Database** | Supabase (PostgreSQL) | User profiles, conversation history |
-| **AI** | Google Gemini 2.0 Flash | Streaming cybersecurity coaching responses |
+| **AI** | Llama 3.3 70B (via Groq) | Streaming cybersecurity coaching responses |
 | **Auth** | Supabase Auth + PyJWT | JWT-based, verified server-side |
 
 ### How auth flows
@@ -94,7 +96,7 @@ SecurCoachAI/
 ├── streamlit/                   # Streamlit backend
 │   ├── app.py                   # Main dashboard — UI, chat loop, session state
 │   ├── auth.py                  # JWT verification, session helpers, auth guard
-│   ├── chat.py                  # Gemini client, streaming, title generation
+│   ├── chat.py                  # Groq client, streaming, title generation, lab mode
 │   ├── db.py                    # All Supabase REST calls (conversations, messages)
 │   └── config.py                # Secrets loader + startup validation
 │
@@ -117,7 +119,7 @@ Make sure you have all of these before starting:
 - **Python 3.10+** — [python.org/downloads](https://www.python.org/downloads/)
 - **Node.js 18+** — [nodejs.org](https://nodejs.org/)
 - **A Supabase project** — free tier works fine — [supabase.com](https://supabase.com)
-- **A Google AI Studio API key** — free tier works fine — [aistudio.google.com](https://aistudio.google.com)
+- **A Groq API key** — free tier works fine — [console.groq.com](https://console.groq.com)
 
 ---
 
@@ -141,10 +143,9 @@ The `requirements.txt` includes:
 | Package | Purpose |
 |---|---|
 | `streamlit>=1.35.0` | Web dashboard framework |
-| `google-generativeai>=0.7.0` | Gemini 2.0 Flash API client |
+| `groq>=0.9.0` | Groq API client (Llama 3.3 70B) |
 | `requests>=2.31.0` | Supabase REST calls from Python |
-| `PyJWT>=2.8.0` | JWT signature verification |
-| `supabase>=2.4.0` | Optional Supabase Python client |
+| `PyJWT[crypto]>=2.8.0` | JWT signature verification |
 
 ### 3. Install React dependencies
 
@@ -187,7 +188,7 @@ cp .streamlit/secrets.toml.example .streamlit/secrets.toml
 ```
 
 ```toml
-GEMINI_API_KEY              = "AIza..."
+GROQ_API_KEY                = "gsk_..."
 SUPABASE_URL                = "https://your-project-ref.supabase.co"
 SUPABASE_KEY                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  # service_role key
 SUPABASE_JWT_SECRET         = "your-jwt-secret"
@@ -203,7 +204,7 @@ SUPABASE_CHAT_HISTORY_TABLE = "chat_history"
 | `REACT_APP_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API → **anon / public** |
 | `SUPABASE_KEY` | Supabase Dashboard → Project Settings → API → **service_role / secret** |
 | `SUPABASE_JWT_SECRET` | Supabase Dashboard → Project Settings → API → **JWT Secret** |
-| `GEMINI_API_KEY` | [aistudio.google.com](https://aistudio.google.com) → Get API key |
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) → API Keys → Create |
 
 > 🔐 **`SUPABASE_KEY` is the service role key** — it has full admin access to your
 > database and bypasses all Row Level Security. It is safe to use here because
@@ -341,29 +342,52 @@ Navigate to **http://localhost:3000** — always start from the React login page
 
 ### Authentication
 - ✅ Email + password signup with full client-side validation
-- ✅ Password strength check (8+ characters minimum)
+- ✅ Password strength enforcement (8+ chars, uppercase, digit, special character)
 - ✅ Username format enforcement (3–30 chars, alphanumeric + underscore)
 - ✅ Confirm password matching on signup
 - ✅ Email confirmation flow (shows "check your inbox" screen when enabled in Supabase)
+- ✅ Password reset flow ("Forgot password?" link on login page)
 - ✅ Button disabled + spinner during API calls — no double-submits
 - ✅ Inline per-field error messages
 - ✅ JWT passed securely via query param — no plain-text email bypass
 - ✅ Server-side JWT signature verification via PyJWT (fails closed — no fallback decode)
+- ✅ Automatic session expiry when JWT expires
 
 ### Chat Dashboard
 - ✅ Six security domains: General Security, Network Security, Web App Security, Cloud Security, Cryptography, Incident Response
-- ✅ Streaming AI responses — text appears token-by-token as Gemini generates it
+- ✅ Streaming AI responses — text appears token-by-token as Groq generates it
+- ✅ Stop generation button — cancel long responses mid-stream
 - ✅ Persistent conversation history stored in Supabase
-- ✅ AI-generated conversation titles (created after the first exchange)
+- ✅ AI-generated conversation titles (extracted inline from response — no extra API call)
 - ✅ Domain-specific suggested starter questions (shown on empty chat)
+- ✅ Conversation search — filter sidebar by title
+- ✅ Context truncation warning when conversation exceeds 20 messages
+- ✅ Structured AI output format (Answer / Example / Think About This)
 - ✅ 2-second rate limit between messages
 - ✅ Export any conversation to `.md` file
 - ✅ Delete individual conversations
 - ✅ Visible DB error banners — errors are never silently swallowed
 - ✅ Session stats (elapsed time, message count) in sidebar
 
+### Multi-Model Selector
+- ✅ Choose between three Groq models in the sidebar:
+  - **Llama 3.3 70B** — Most capable, best for complex topics (default)
+  - **Llama 3.1 8B** — Fast, good for quick questions
+  - **Mixtral 8x7B** — Balanced, 32K context window
+- ✅ Model selection persists across messages within a session
+
+### 🧪 Hands-On Lab Mode
+- ✅ Toggle Lab Mode in the sidebar to switch from Q&A to hands-on security challenges
+- ✅ The AI presents realistic vulnerable code, configs, or logs and asks you to identify, exploit, and remediate the issue
+- ✅ Six domain-specific lab scenarios (OWASP code review, IAM policy audit, firewall config analysis, incident log forensics, crypto implementation review, and general misconfig hunting)
+- ✅ The AI evaluates your response and provides hints if incorrect — never reveals the answer upfront
+- ✅ Lab-specific suggested challenges shown on empty chat
+- ✅ Visual `🧪 Lab` chip badge in the header when active
+
 ### Code Quality
 - ✅ `app.py` split into four focused modules (`auth`, `db`, `chat`, `config`)
+- ✅ Dashboard CSS extracted to external file (`dashboard.css`)
+- ✅ Unified design token palette between React auth and Streamlit dashboard
 - ✅ Startup config validation — clear error message if any secret is missing
 - ✅ Type annotations throughout Python codebase
 - ✅ Official `@supabase/supabase-js` SDK in React (replaces ~150 lines of manual `fetch`)
@@ -377,6 +401,8 @@ Navigate to **http://localhost:3000** — always start from the React login page
 | Forged JWT tokens | PyJWT verifies signature using `SUPABASE_JWT_SECRET` — invalid tokens are rejected |
 | Plain-text email auth bypass | Removed — only signed JWTs are accepted |
 | JWT signature bypass (dev fallback) | Removed — auth fails closed if PyJWT or the secret is unavailable |
+| Expired JWT sessions | JWT `exp` claim re-checked on every page load; expired sessions redirect to login |
+| Weak passwords | Requires 8+ chars with uppercase, digit, and special character |
 | Cross-user data access | Server-side `user_id` filter on every query + RLS policies as backup |
 | Service role key exposure | Lives only in `.streamlit/secrets.toml` — gitignored, never sent to browser |
 | Double form submission | Submit button disabled during in-flight API calls |
@@ -395,17 +421,19 @@ You navigated directly to `http://localhost:8501` without going through the Reac
 **`SUPABASE_JWT_SECRET` — where exactly is it?**
 Supabase Dashboard → Project Settings → API → scroll to the bottom → **JWT Settings** → copy the secret. It is not the same as your API keys.
 
-**Gemini API quota errors**
-The free tier of Google AI Studio has per-minute rate limits. If you hit them, wait 60 seconds and try again. For production use, set up billing in Google Cloud Console.
+**Groq API quota errors**
+The free tier of Groq has per-minute rate limits. If you hit them, wait 60 seconds and try again. For production use, upgrade your Groq plan.
 
 **Conversation titles show raw message text instead of an AI title**
-Title generation is async and fires after the first exchange. If Gemini is slow or rate-limited, the title falls back to the first 40 characters of your opening message — this is expected behaviour.
+Title generation is async and fires after the first exchange. If the LLM is slow or rate-limited, the title falls back to the first 40 characters of your opening message — this is expected behaviour.
 
 ---
 
 ## Roadmap
 
-- [ ] Password reset flow (`supabase.auth.resetPasswordForEmail`)
+- [x] Password reset flow (`supabase.auth.resetPasswordForEmail`)
+- [x] Multi-model selector (Llama 3.3 70B, Llama 3.1 8B, Mixtral 8x7B)
+- [x] Hands-on lab mode — AI presents vulnerable code for user to identify and fix
 - [ ] User profile page (update display name, username)
 - [ ] Per-domain progress tracking (messages sent, topics covered)
 - [ ] Quiz mode — AI generates multiple-choice questions to test retention
@@ -417,5 +445,5 @@ Title generation is async and fires after the first exchange. If Gemini is slow 
 ---
 
 <div align="center">
-<sub>Built with React, Streamlit, Supabase, and Google Gemini 2.0 Flash</sub>
+<sub>Built with React, Streamlit, Supabase, and Llama 3.3 70B via Groq</sub>
 </div>
