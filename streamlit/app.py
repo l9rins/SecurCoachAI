@@ -537,31 +537,37 @@ if prompt:
                 st.session_state.stop_generation = True
 
         buffer = ""
-        with st.spinner("🧠 Thinking..."):
-            for chunk in llm_engine.stream_response(st.session_state.messages, request_title=is_first_exchange):
-                # Check for stop
-                if st.session_state.get("stop_generation"):
-                    break
-                
-                buffer += chunk
-                # Clean on every chunk might be overkill, but ensures metadata is hidden immediately
-                clean_buffer = _clean_response(buffer)
-                full_response = clean_buffer
-                
-                with ai_placeholder.container():
-                    header_html = (
-                        f'<div class="msg-meta">'
-                        f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
-                        f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
-                        f'<span class="name" style="color:var(--color-gold-text);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
-                        f'<span class="sep">·</span>'
-                        f'<span class="time">{html_lib.escape(now_ts)}</span>'
-                        f'</div>'
-                    )
-                    st.markdown(
-                        f'<div class="msg-ai">{header_html}\n\n{clean_buffer}▌\n\n</div>',
-                        unsafe_allow_html=True,
-                    )
+        
+        # Initial loading state before first chunk
+        header_html = (
+            f'<div class="msg-meta">'
+            f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
+            f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
+            f'<span class="name" style="color:var(--color-accent-gold);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
+            f'<span class="sep">·</span>'
+            f'<span class="time">{html_lib.escape(now_ts)}</span>'
+            f'</div>'
+        )
+        ai_placeholder.markdown(
+            f'<div class="msg-ai">{header_html}\n\n<div style="display:flex;align-items:center;gap:8px;color:var(--color-accent-gold);padding:8px 0"><i class="ph ph-circle-notch ph-spin"></i><span style="font-size:13px">Thinking...</span></div></div>',
+            unsafe_allow_html=True,
+        )
+
+        for chunk in llm_engine.stream_response(st.session_state.messages, request_title=is_first_exchange):
+            # Check for stop
+            if st.session_state.get("stop_generation"):
+                break
+            
+            buffer += chunk
+            # Clean on every chunk might be overkill, but ensures metadata is hidden immediately
+            clean_buffer = _clean_response(buffer)
+            full_response = clean_buffer
+            
+            with ai_placeholder.container():
+                st.markdown(
+                    f'<div class="msg-ai">{header_html}\n\n{clean_buffer}▌\n\n</div>',
+                    unsafe_allow_html=True,
+                )
 
         # Clear stop button
         stop_btn_holder.empty()

@@ -44,7 +44,8 @@ _OUTPUT_FORMAT = (
     "## Example\n[A practical code snippet, command, or scenario — never skip this]\n\n"
     "## Think About This\n[One follow-up question to deepen understanding]\n\n"
     "Format all code blocks with proper language-tagged fences (```python, ```bash, etc.).\n"
-    "Keep responses thorough but focused. Never give vague answers — always be specific and actionable."
+    "Keep responses thorough but focused. Never give vague answers — always be specific and actionable.\n"
+    "CRITICAL: Break your main explanation into short, readable paragraphs (maximum 2-3 sentences each) or use bullet points. NEVER output a single unbroken wall of text."
 )
 
 _SYSTEM_PROMPTS: dict[str, str] = {
