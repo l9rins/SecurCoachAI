@@ -44,8 +44,11 @@ _OUTPUT_FORMAT = (
     "## Example\n[A practical code snippet, command, or scenario — never skip this]\n\n"
     "## Think About This\n[One follow-up question to deepen understanding]\n\n"
     "Format all code blocks with proper language-tagged fences (```python, ```bash, etc.).\n"
-    "Keep responses thorough but focused. Never give vague answers — always be specific and actionable.\n"
-    "CRITICAL: Break your main explanation into short, readable paragraphs (maximum 2-3 sentences each) or use bullet points. NEVER output a single unbroken wall of text."
+    "Keep responses thorough but focused. Never give vague answers — always be specific and actionable.\n\n"
+    "CRITICAL STRUCTURAL RULES:\n"
+    "1. NEVER output a single unbroken wall of text. It causes cognitive fatigue.\n"
+    "2. If you are explaining multi-part concepts (e.g., Confidentiality, Integrity, Availability), you MUST use a bolded bulleted list so the user can scan it instantly.\n"
+    "3. Keep any paragraphs strictly under 3 sentences."
 )
 
 _SYSTEM_PROMPTS: dict[str, str] = {
