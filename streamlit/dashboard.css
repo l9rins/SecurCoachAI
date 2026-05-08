@@ -1,5 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* ── Keyframe Animations (Cinematic Feel) ── */
+@keyframes slideUpFade {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 175, 55, 0.2); }
+  50% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.6); }
+}
+
+@keyframes subtleBreathe {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
 :root {
   /* Ultra-Premium Dark Mode Tokens */
   --color-page-bg: #05070A;
@@ -99,7 +115,8 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   border-radius: 10px;
   padding: 10px 16px;
-  transition: all var(--transition-base);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 [data-testid="stButton"] > button p {
@@ -128,6 +145,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 16px 16px 0 16px;
   padding: var(--spacing-md);
   color: #FFF; font-size: 14px; line-height: 1.6;
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .msg-ai {
@@ -138,6 +156,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px 12px 12px 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   padding: var(--spacing-md); margin-bottom: var(--spacing-lg);
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .msg-meta {
@@ -149,6 +168,7 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(135deg, var(--color-accent-gold-hover), var(--color-accent-gold));
   color: #111; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  animation: pulseGlow 4s infinite ease-in-out;
 }
 .msg-meta .name { color: var(--color-text-bright); font-weight: 600; }
 .msg-meta .time { color: rgba(255,255,255,0.3); }
@@ -194,6 +214,7 @@ code { font-family: var(--font-code); font-size: 12.5px; color: #E8DFC8; }
   background: rgba(16, 20, 32, 0.5); border: 1px solid rgba(74, 122, 154, 0.2);
   border-left: 2px solid #4A7A9A; border-radius: 8px; padding: 16px;
   color: #7A9AA8; font-style: italic; box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+  animation: subtleBreathe 3s infinite ease-in-out;
 }
 
 /* ── Quiz & Progress Enhancements ── */
