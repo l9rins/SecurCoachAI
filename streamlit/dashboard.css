@@ -1,570 +1,216 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/**
- * dashboard.css
- * SecurCoachAI Streamlit Dashboard
- * Design System: Warp Terminal meets Linear.app precision
- * 
- * Locked spec colors, fonts, spacing. No !important flags.
- */
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Design System Tokens (Locked Spec)
-   ────────────────────────────────────────────────────────────────────────── */
-
 :root {
-  /* Backgrounds */
-  --color-page-bg: #080B10;
-  --color-sidebar-bg: #0A0E14;
-  --color-surface: #0D1117;
+  /* Ultra-Premium Dark Mode Tokens */
+  --color-page-bg: #05070A;
+  --color-sidebar-bg: rgba(8, 11, 16, 0.6);
+  --color-surface: rgba(13, 17, 23, 0.45);
   
-  /* Text */
-  --color-text-bright: #E8DFC8;
-  --color-text-muted: #8A8070;
-  --color-text-error: #EF5350;
-  --color-text-success: #66BB6A;
+  --color-text-bright: #F5EEDB;
+  --color-text-muted: #A39783;
+  --color-text-error: #FF6B6B;
+  --color-text-success: #69DB7C;
   
-  /* Accent (only accent) */
-  --color-accent-gold: #C1943C;
-  --color-accent-gold-hover: #D4A255;
-  --color-accent-gold-active: #B88630;
+  /* Distinctive Gold Accent */
+  --color-accent-gold: #D4AF37;
+  --color-accent-gold-hover: #EEDC82;
+  --color-accent-gold-active: #B8860B;
   
-  /* Borders */
-  --color-border: #1C1A16;
-  --color-border-subtle: rgba(28, 26, 22, 0.5);
-  
-  /* Semantic colors */
-  --color-info-bg: #101420;
-  --color-info-text: #4A7A9A;
-  --color-success-bg: #0D1A12;
-  --color-success-text: #3A7A4A;
-  --color-warning-bg: #1A1408;
-  --color-warning-text: #9A7030;
-  --color-error-bg: #1A0D0D;
-  --color-error-text: #8A3A3A;
+  --color-border: rgba(212, 175, 55, 0.15);
+  --color-border-glow: rgba(212, 175, 55, 0.3);
   
   /* Typography */
-  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-code: 'JetBrains Mono', 'Courier New', monospace;
+  --font-heading: 'Space Grotesk', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-code: 'JetBrains Mono', monospace;
   
-  /* Spacing (12px base unit) */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-base: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  
-  /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --spacing-sm: 8px; --spacing-base: 12px; --spacing-md: 16px; --spacing-lg: 24px;
+  --transition-base: 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ──────────────────────────────────────────────────────────────────────────
-   Base Styling
-   ────────────────────────────────────────────────────────────────────────── */
-
-html,
-body,
-.stApp {
-  background: var(--color-page-bg);
+/* ── Base App & Ambient Background ── */
+html, body, .stApp {
+  background-color: var(--color-page-bg);
   color: var(--color-text-muted);
   font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 400;
   line-height: 1.6;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+.stApp {
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(59, 139, 212, 0.04) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.3); }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-subtle);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Sidebar Navigation (Linear.app Pattern)
-   ────────────────────────────────────────────────────────────────────────── */
-
+/* ── Sidebar (Frosted Glass) ── */
 section[data-testid="stSidebar"] {
-  background: var(--color-sidebar-bg);
-  border-right: 0.5px solid var(--color-border);
-  width: 220px;
-  min-width: 220px;
-  padding: var(--spacing-xl) var(--spacing-base);
-  flex-shrink: 0;
-}
-
-section[data-testid="stSidebar"] * {
-  color: var(--color-text-bright);
+  background: var(--color-sidebar-bg) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  box-shadow: 2px 0 24px rgba(0,0,0,0.5);
 }
 
 .sidebar-logo-text {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--color-text-bright);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-family: var(--font-heading); font-weight: 600; font-size: 16px;
+  background: linear-gradient(to right, #FFF, var(--color-accent-gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
-/* Radio buttons (page navigation) */
-div[data-testid="stRadio"] > div {
-  background: transparent;
-  border: none;
-  gap: var(--spacing-sm);
-  flex-direction: row;
-}
-
+/* Radio buttons (Sleek Segmented Tabs) */
+div[data-testid="stRadio"] > div { gap: 4px; flex-direction: row; }
 div[data-testid="stRadio"] label {
-  font-family: var(--font-heading);
-  font-weight: 500;
-  font-size: 12px;
-  color: var(--color-text-muted);
-  padding: var(--spacing-sm) var(--spacing-md);
-  height: 36px;
-  display: flex;
-  align-items: center;
-  border-radius: 6px;
-  transition: background var(--transition-fast), color var(--transition-fast);
-  cursor: pointer;
-  margin: 0;
-  border: none;
+  font-family: var(--font-heading); font-weight: 500; font-size: 12px;
+  padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  transition: all var(--transition-base); border: none; background: transparent;
 }
-
-/* Remove radio button indicators */
-div[data-testid="stRadio"] label::before,
-div[data-testid="stRadio"] label::after {
-  display: none;
-  content: none;
-}
+div[data-testid="stRadio"] label::before, div[data-testid="stRadio"] label::after { display: none; }
 
 div[data-testid="stRadio"] label:hover {
-  background: rgba(193, 148, 60, 0.08);
-  color: var(--color-text-bright);
+  background: rgba(255, 255, 255, 0.05); color: #FFF;
 }
-
 div[data-testid="stRadio"] label[data-checked="true"] {
-  background: var(--color-accent-gold);
-  color: var(--color-page-bg);
-  font-weight: 600;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), transparent);
+  border-left: 2px solid var(--color-accent-gold); color: #FFF; border-radius: 4px 8px 8px 4px;
 }
 
-div[data-testid="stRadio"] label[data-checked="true"] * {
-  color: var(--color-page-bg);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Typography
-   ────────────────────────────────────────────────────────────────────────── */
-
+/* ── Typography ── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--color-text-bright);
-  font-weight: 600;
-  line-height: 1.3;
-  margin-bottom: var(--spacing-base);
+  font-family: var(--font-heading); font-weight: 600;
+  background: linear-gradient(to right, #FFF, var(--color-text-muted));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: var(--spacing-base); letter-spacing: -0.02em;
 }
 
-h1 { font-size: 24px; }
-h2 { font-size: 20px; }
-h3 { font-size: 16px; }
-
-p {
-  font-family: var(--font-body);
-  color: var(--color-text-muted);
-  line-height: 1.6;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Chat Messages
-   ────────────────────────────────────────────────────────────────────────── */
-
-.msg-user,
-.msg-ai {
-  margin-bottom: var(--spacing-lg);
-  position: relative;
-}
-
-.msg-user {
-  display: flex;
-  justify-content: flex-end;
-  background: transparent;
-  border: none;
-  margin-left: 0;
-  padding: 0;
-}
-
-.msg-user-bubble {
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  border-radius: 12px;
-  padding: var(--spacing-md);
-  font-family: var(--font-body);
-  font-weight: 400;
-  font-size: 14px;
-  color: var(--color-text-bright);
-  line-height: 1.6;
-  max-width: 72%;
-  word-break: break-word;
-}
-
-.msg-ai {
-  display: block;
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  border-left: 2px solid var(--color-accent-gold);
-  border-radius: 8px;
-  padding: var(--spacing-md);
-  margin-right: 0;
-}
-
-.msg-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-base);
-  margin-bottom: var(--spacing-sm);
-  font-family: var(--font-heading);
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  letter-spacing: 0.05em;
-}
-
-.msg-meta .avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  background: var(--color-page-bg);
-  border: 0.5px solid var(--color-accent-gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.msg-meta .avatar i {
-  font-size: 11px;
-  color: var(--color-accent-gold);
-}
-
-.msg-meta .name {
-  color: var(--color-accent-gold);
-  font-family: var(--font-heading);
-  font-weight: 500;
-}
-
-.msg-meta .sep {
-  color: var(--color-border);
-}
-
-.msg-meta .time {
-  color: var(--color-text-muted);
-}
-
-.msg-ai p {
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--color-text-muted);
-  line-height: 1.8;
-  max-width: 68ch;
-}
-
-/* Code blocks */
-code {
-  font-family: var(--font-code);
-  font-size: 12px;
-  color: var(--color-text-bright);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0 var(--spacing-sm);
-  border-radius: 3px;
-}
-
-pre {
-  background: rgba(0, 0, 0, 0.3);
-  border: 0.5px solid var(--color-border);
-  border-radius: 6px;
-  padding: var(--spacing-md);
-  overflow-x: auto;
-  font-family: var(--font-code);
-  font-size: 12px;
-  color: var(--color-text-bright);
-  line-height: 1.5;
-}
-
-pre code {
-  background: none;
-  padding: 0;
-  color: inherit;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Response Headers & Think Blocks
-   ────────────────────────────────────────────────────────────────────────── */
-
-.response-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--color-accent-gold);
-  letter-spacing: 0.05em;
-}
-
-.response-header i {
-  font-size: 14px;
-}
-
-.think-block {
-  background: var(--color-info-bg);
-  border: 0.5px solid var(--color-border);
-  border-left: 2px solid var(--color-info-text);
-  border-radius: 6px;
-  padding: var(--spacing-md);
-  margin: var(--spacing-lg) 0;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--color-info-text);
-  line-height: 1.6;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Forms & Inputs
-   ────────────────────────────────────────────────────────────────────────── */
-
-[data-testid="stTextInput"] input,
-[data-testid="stTextArea"] textarea,
-[data-testid="stSelectbox"] select {
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  color: var(--color-text-bright);
-  padding: var(--spacing-sm) var(--spacing-base);
-  border-radius: 4px;
-  font-family: var(--font-body);
-  font-size: 13px;
-}
-
-[data-testid="stTextInput"] input:focus,
-[data-testid="stTextArea"] textarea:focus,
-[data-testid="stSelectbox"] select:focus {
-  outline: none;
-  border-color: var(--color-accent-gold);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Buttons
-   ────────────────────────────────────────────────────────────────────────── */
-
+/* ── Buttons (Premium Glass Cards) ── */
 [data-testid="stButton"] > button {
-  background: var(--color-accent-gold);
-  color: var(--color-text-bright);
-  border: none;
-  border-radius: 4px;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background var(--transition-fast);
+  background: rgba(20, 24, 30, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: all var(--transition-base);
 }
 
 [data-testid="stButton"] > button p {
   color: var(--color-text-bright);
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 13px;
+  transition: color var(--transition-base);
 }
 
 [data-testid="stButton"] > button:hover {
-  background: var(--color-accent-gold-hover);
+  border-color: var(--color-border-glow);
+  background: rgba(30, 36, 45, 0.7);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+[data-testid="stButton"] > button:hover p { color: #FFF; }
+[data-testid="stButton"] > button:active { transform: translateY(1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+/* ── Chat Messages ── */
+.msg-user-bubble {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.02));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+  border-radius: 16px 16px 0 16px;
+  padding: var(--spacing-md);
+  color: #FFF; font-size: 14px; line-height: 1.6;
 }
 
-[data-testid="stButton"] > button:active {
-  background: var(--color-accent-gold-active);
-}
-
-[data-testid="stButton"] > button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Quiz & Progress Components
-   ────────────────────────────────────────────────────────────────────────── */
-
-.quiz-container {
+.msg-ai {
   background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  border-radius: 8px;
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 2px solid var(--color-accent-gold);
+  border-radius: 8px 12px 12px 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  padding: var(--spacing-md); margin-bottom: var(--spacing-lg);
 }
 
-.quiz-question {
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 16px;
-  color: var(--color-text-bright);
-  margin-bottom: var(--spacing-xl);
-  line-height: 1.6;
+.msg-meta {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  font-family: var(--font-heading); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+}
+.msg-meta .avatar {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--color-accent-gold-hover), var(--color-accent-gold));
+  color: #111; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+.msg-meta .name { color: var(--color-text-bright); font-weight: 600; }
+.msg-meta .time { color: rgba(255,255,255,0.3); }
+
+/* Code Blocks */
+pre {
+  background: #000; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 16px; overflow-x: auto;
+  box-shadow: inset 0 2px 12px rgba(0,0,0,0.5);
+}
+code { font-family: var(--font-code); font-size: 12.5px; color: #E8DFC8; }
+
+/* ── Chat Input (Floating Glass) ── */
+.stChatInputContainer {
+  background: rgba(10, 14, 20, 0.7) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.02) inset !important;
+  transition: all 0.3s ease !important;
+  padding: 4px 8px !important;
 }
 
+.stChatInputContainer:focus-within {
+  border-color: var(--color-accent-gold) !important;
+  box-shadow: 0 16px 40px rgba(212, 175, 55, 0.15), 0 0 0 1px rgba(212, 175, 55, 0.2) inset !important;
+  background: rgba(10, 14, 20, 0.9) !important;
+}
+
+/* ── Forms & Inputs ── */
+[data-testid="stTextInput"] input, [data-testid="stSelectbox"] select {
+  background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.08);
+  color: #FFF; border-radius: 6px; padding: 10px 14px; transition: all 0.2s;
+}
+[data-testid="stTextInput"] input:focus, [data-testid="stSelectbox"] select:focus {
+  outline: none; border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* ── Think Block ── */
+.think-block {
+  background: rgba(16, 20, 32, 0.5); border: 1px solid rgba(74, 122, 154, 0.2);
+  border-left: 2px solid #4A7A9A; border-radius: 8px; padding: 16px;
+  color: #7A9AA8; font-style: italic; box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ── Quiz & Progress Enhancements ── */
+.quiz-container {
+  background: rgba(13, 17, 23, 0.4); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 32px;
+}
 .quiz-option {
-  background: var(--color-page-bg);
-  border: 0.5px solid var(--color-border);
-  border-radius: 4px;
-  padding: var(--spacing-base) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-family: var(--font-code);
-  font-size: 12px;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px; padding: 16px; transition: all 0.2s;
 }
-
-.quiz-option:hover {
-  background: rgba(193, 148, 60, 0.05);
-  border-color: var(--color-accent-gold);
-}
-
-.quiz-option.selected {
-  background: var(--color-accent-gold);
-  border-color: var(--color-accent-gold);
-  color: var(--color-page-bg);
-}
-
-.quiz-option.correct {
-  background: var(--color-success-bg);
-  border-color: var(--color-success-text);
-  color: var(--color-success-text);
-}
-
-.quiz-option.incorrect {
-  background: var(--color-error-bg);
-  border-color: var(--color-error-text);
-  color: var(--color-error-text);
-}
-
-/* Progress bars */
-[data-testid="stProgress"] > div > div > div {
-  background: var(--color-accent-gold);
-}
-
-/* ── Progress & Stats ── */
-.progress-domain-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-heading);
-  font-weight: 600;
-  color: var(--color-text-bright);
-  margin-top: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
-}
-.progress-domain-label .progress-score-label,
-.progress-score-label {
-  font-family: var(--font-body);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  font-size: 13px;
-}
+.quiz-option:hover { border-color: var(--color-accent-gold); background: rgba(212, 175, 55, 0.05); transform: translateX(4px); }
+.quiz-option.selected { background: rgba(212, 175, 55, 0.1); border-color: var(--color-accent-gold); }
 
 .stat-card {
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  padding: var(--spacing-sm);
-  border-radius: 8px;
-  text-align: center;
+  background: rgba(13, 17, 23, 0.4); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.05); border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.2s;
 }
-.stat-num {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  color: var(--color-text-bright);
-  font-weight: 600;
-}
-.stat-label {
-  font-family: var(--font-body);
-  color: var(--color-text-muted);
-  font-size: 12px;
-}
-
-/* ── Quiz result helpers ── */
-.quiz-prev-score {
-  background: transparent;
-  color: var(--color-text-muted);
-  font-family: var(--font-body);
-  margin-bottom: var(--spacing-base);
-}
-
-.quiz-explanation {
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  padding: var(--spacing-sm);
-  border-radius: 6px;
-  color: var(--color-text-muted);
-  font-family: var(--font-body);
-  margin: var(--spacing-sm) 0 var(--spacing-lg) 0;
-}
-.quiz-explanation.correct {
-  border-left: 3px solid var(--color-accent-gold);
-}
-
-.quiz-score-card {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  background: var(--color-surface);
-  border: 0.5px solid var(--color-border);
-  padding: var(--spacing-md);
-  border-radius: 8px;
-  margin-top: var(--spacing-lg);
-}
-.quiz-score-num {
-  font-family: var(--font-heading);
-  font-size: 20px;
-  font-weight: 600;
-}
-.quiz-score-label {
-  font-family: var(--font-body);
-  color: var(--color-text-muted);
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Focus States (Accessibility)
-   ────────────────────────────────────────────────────────────────────────── */
-
-button:focus-visible,
-[role="button"]:focus-visible,
-a:focus-visible {
-  outline: 0.5px solid var(--color-accent-gold);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* ──────────────────────────────────────────────────────────────────────────
-   Responsive Design
-   ────────────────────────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  section[data-testid="stSidebar"] {
-    display: none;
-  }
-  
-  .msg-user-bubble {
-    max-width: 88%;
-  }
-}
+.stat-card:hover { transform: translateY(-4px); border-color: rgba(212, 175, 55, 0.2); }
