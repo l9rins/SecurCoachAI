@@ -214,3 +214,9 @@ code { font-family: var(--font-code); font-size: 12.5px; color: #E8DFC8; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.2); transition: transform 0.2s;
 }
 .stat-card:hover { transform: translateY(-4px); border-color: rgba(212, 175, 55, 0.2); }
+
+/* ── Streamlit Container Overrides ── */
+.st-emotion-cache-1r1cntt {
+    padding-top: 0px;
+    padding-bottom: 0rem;
+}
