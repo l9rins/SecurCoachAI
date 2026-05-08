@@ -96,8 +96,14 @@ export default function LoginLayout({ onSwitchToSignup }) {
       <div className="auth-root">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="auth-shield">🔑</span>
-            <h1 className="auth-title">Reset password</h1>
+            <div className="brand-logo"><i className="ph ph-shield"></i></div>
+            <div className="brand-text">
+                <span className="brand-name">SecurCoach AI</span>
+                <span className="brand-tagline">Cybersecurity Training</span>
+            </div>
+          </div>
+          <div className="auth-divider"></div>
+          <h1 className="auth-title" style={{ display: 'none' }}>Login</h1>
             <p className="auth-subtitle">Enter your email and we'll send a reset link</p>
           </div>
           <form className="auth-form" onSubmit={handleForgotPassword} noValidate>
@@ -140,71 +146,60 @@ export default function LoginLayout({ onSwitchToSignup }) {
     <div className="auth-root">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="auth-shield">🛡️</span>
-          <h1 className="auth-title">SecurCoach AI</h1>
-          <p className="auth-subtitle">Your cybersecurity training companion</p>
+          <div className="brand-logo"><i className="ph ph-shield"></i></div>
+          <div className="brand-text">
+              <span className="brand-name">SecurCoach AI</span>
+              <span className="brand-tagline">Cybersecurity Training</span>
+          </div>
         </div>
+        <div className="auth-divider"></div>
+
+        {apiError && <div className="auth-error">{apiError}</div>}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          {apiError && (
-            <div className="auth-error" role="alert">
-              {apiError}
-            </div>
-          )}
-
           <div className="field-group">
-            <label className="field-label" htmlFor="email">Email</label>
+            <label className="field-label">Email Address</label>
             <input
-              id="email"
-              className={`field-input${errors.email ? " field-input--error" : ""}`}
+              className={`field-input ${errors.email ? "field-input--error" : ""}`}
               type="email"
-              placeholder="you@example.com"
+              placeholder="name@company.com"
               value={form.email}
               onChange={(e) => update("email", e.target.value)}
-              autoComplete="email"
               disabled={loading}
+              autoComplete="email"
             />
-            {errors.email && <span className="field-error">{errors.email}</span>}
+            {errors.email && <div className="field-error">{errors.email}</div>}
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="password">Password</label>
+            <label className="field-label">Password</label>
             <input
-              id="password"
-              className={`field-input${errors.password ? " field-input--error" : ""}`}
+              className={`field-input ${errors.password ? "field-input--error" : ""}`}
               type="password"
               placeholder="••••••••"
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
-              autoComplete="current-password"
               disabled={loading}
+              autoComplete="current-password"
             />
-            {errors.password && <span className="field-error">{errors.password}</span>}
+            {errors.password && <div className="field-error">{errors.password}</div>}
           </div>
 
           <button className="auth-btn" type="submit" disabled={loading}>
-            {loading ? (
-              <span className="auth-btn-inner">
-                <span className="spinner" /> Signing in…
-              </span>
-            ) : (
-              "Sign in"
-            )}
+            {loading ? <span className="spinner"></span> : "Sign in"}
           </button>
-
-          <p className="auth-switch" style={{ marginTop: '0.25rem' }}>
-            <button className="link-btn" onClick={() => setForgotMode(true)} disabled={loading}>
-              Forgot password?
-            </button>
-          </p>
         </form>
 
-        <p className="auth-switch">
-          Don't have an account?{" "}
-          <button className="link-btn" onClick={onSwitchToSignup} disabled={loading}>
-            Sign up
-          </button>
-        </p>
+        <div className="auth-footer">
+          <button className="link-btn secondary" onClick={() => setForgotMode(true)}>Forgot password</button>
+          <span style={{ color: '#2A2520' }}>·</span>
+          <button className="link-btn" onClick={onSwitchToSignup}>Create account</button>
+        </div>
+
+        <div className="security-badge">
+          <div className="dot"></div>
+          <span>TLS 1.3 ENCRYPTED</span>
+        </div>
       </div>
     </div>
   );

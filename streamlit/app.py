@@ -132,21 +132,41 @@ def _group_conversations(summaries: list[dict]) -> dict[str, list[dict]]:
 
 # ── Rendering helpers ─────────────────────────────────────────────────────────
 
+def _clean_response(text: str) -> str:
+    """Strip prompt artifacts and metadata from AI responses."""
+    import re
+    # Remove metadata lines like TITLE: ... or CATEGORY: ...
+    text = re.sub(r'^(TITLE|CATEGORY|TOPIC|DOMAIN):\s*.*$', '', text, flags=re.MULTILINE | re.IGNORECASE)
+    # Remove leading/trailing whitespace
+    return text.strip()
+
 def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | None = None) -> None:
     role  = msg["role"]
     ts    = msg.get("timestamp", "")
-    label = "You" if role == "user" else "🛡️ SecurCoach"
-    cls   = "msg-user" if role == "user" else "msg-ai"
-    safe_ts = html_lib.escape(ts)
-    safe_content = msg["content"]
+    content = _clean_response(msg["content"])
     
     target = container or st
-    # We wrap the entire message in the styled div. 
-    # To support markdown inside, we use a single markdown call with the HTML wrapper.
-    target.markdown(
-        f'<div class="{cls}"><div class="msg-meta">{label} · {safe_ts}</div>\n\n{safe_content}\n\n</div>',
-        unsafe_allow_html=True,
-    )
+    
+    if role == "user":
+        target.markdown(
+            f'<div class="msg-user"><div class="msg-user-bubble">{html_lib.escape(content)}</div></div>',
+            unsafe_allow_html=True
+        )
+    else:
+        # AI Header with Phosphor shield icon
+        header_html = (
+            f'<div class="msg-meta">'
+            f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
+            f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
+            f'<span class="name" style="color:var(--color-gold-text);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
+            f'<span class="sep">·</span>'
+            f'<span class="time">{html_lib.escape(ts)}</span>'
+            f'</div>'
+        )
+        target.markdown(
+            f'<div class="msg-ai">{header_html}\n\n{content}\n\n</div>',
+            unsafe_allow_html=True
+        )
 
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
@@ -164,6 +184,9 @@ def _export_markdown() -> str:
 
 _init_state()
 
+# Inject Phosphor Icons
+st.markdown("<script src='https://unpkg.com/@phosphor-icons/web'></script>", unsafe_allow_html=True)
+
 if not auth.require_auth():
     st.stop()
 
@@ -171,8 +194,17 @@ user_email = auth.get_user_email()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("## 🛡️ SecurCoach AI")
-    st.markdown(f"<small style='color:var(--text3)'>{html_lib.escape(user_email)}</small>", unsafe_allow_html=True)
+    # Logo block
+    st.markdown(
+        "<div style='display:flex;align-items:center;gap:10px;margin-bottom:20px'>"
+        "<div style='width:24px;height:24px;background:#C1943C;border-radius:6px;display:flex;align-items:center;justify-content:center'>"
+        "<i class='ph ph-shield-check' style='color:#0D0B07;font-size:16px'></i>"
+        "</div>"
+        "<span style='font-family:\"Space Grotesk\";font-weight:600;font-size:14px;color:#C8BFA8'>SecurCoach AI</span>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+    st.markdown(f"<p style='font-family:\"Space Grotesk\";font-size:9px;color:var(--color-text-faint);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px'>{html_lib.escape(user_email)}</p>", unsafe_allow_html=True)
 
     # Page navigation
     active_page = st.radio(
@@ -304,25 +336,20 @@ if st.session_state.active_page == "📊 Progress":
     progress.render_progress(user_email)
     st.stop()
 
-# ── Chat page ─────────────────────────────────────────────────────────────────
-header_col, chip_col = st.columns([6, 2])
-with header_col:
-    st.markdown(
-        "<div class='hero-header'>"
-        "<h1>🛡️ SecurCoach AI</h1>"
-        "<p>Your personalized, elite cybersecurity mentor.</p>"
-        "</div>", 
-        unsafe_allow_html=True
-    )
-with chip_col:
-    chips_html = (
-        f"<div style='padding-top:18px;text-align:right'>"
-        f"<span class='domain-chip'>{html_lib.escape(st.session_state.selected_domain)}</span>"
-    )
-    if st.session_state.lab_mode:
-        chips_html += " <span class='lab-chip'>🧪 Lab</span>"
-    chips_html += "</div>"
-    st.markdown(chips_html, unsafe_allow_html=True)
+# ── Topbar ────────────────────────────────────────────────────────────────────
+st.markdown(
+    f"<header style='display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 20px;border-bottom:0.5px solid var(--color-border-default);background:var(--color-bg-base);margin:-1rem -1rem 1rem -1rem'>"
+    f"<div style='display:flex;align-items:center;gap:6px'>"
+    f"<div style='width:5px;height:5px;background:#C1943C;border-radius:50%'></div>"
+    f"<span style='font-family:\"Space Grotesk\";font-weight:500;font-size:12px;color:#C1943C'>{html_lib.escape(st.session_state.selected_domain)}</span>"
+    f"</div>"
+    f"<div style='display:flex;align-items:center;gap:5px'>"
+    f"<i class='ph ph-cpu' style='font-size:12px;color:var(--color-text-faint)'></i>"
+    f"<span style='font-family:\"Space Grotesk\";font-weight:500;font-size:10px;color:var(--color-text-faint)'>{html_lib.escape(st.session_state.selected_model)}</span>"
+    f"</div>"
+    f"</header>", 
+    unsafe_allow_html=True
+)
 
 # DB error banner
 db_err = db.get_error()
@@ -438,11 +465,22 @@ if prompt:
                     break
                 
                 buffer += chunk
-                full_response = buffer
-                # Use a container to render header (HTML) and body (Markdown) separately
+                # Clean on every chunk might be overkill, but ensures metadata is hidden immediately
+                clean_buffer = _clean_response(buffer)
+                full_response = clean_buffer
+                
                 with ai_placeholder.container():
+                    header_html = (
+                        f'<div class="msg-meta">'
+                        f'<div class="avatar" style="width:20px;height:20px;border-radius:5px;background:#1A1508;border:0.5px solid rgba(193,148,60,0.4);display:flex;align-items:center;justify-content:center">'
+                        f'<i class="ph ph-shield" style="font-size:11px;color:#C1943C"></i></div>'
+                        f'<span class="name" style="color:var(--color-gold-text);font-family:\'Space Grotesk\'">SecurCoach AI</span>'
+                        f'<span class="sep">·</span>'
+                        f'<span class="time">{html_lib.escape(now_ts)}</span>'
+                        f'</div>'
+                    )
                     st.markdown(
-                        f'<div class="msg-ai"><div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>\n\n{buffer}▌\n\n</div>',
+                        f'<div class="msg-ai">{header_html}\n\n{clean_buffer}▌\n\n</div>',
                         unsafe_allow_html=True,
                     )
 
@@ -457,12 +495,6 @@ if prompt:
                 unsafe_allow_html=True,
             )
         else:
-            ai_placeholder.markdown(
-                f'<div class="msg-ai">'
-                f'<div class="msg-meta">🛡️ SecurCoach · {now_ts}</div>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
             _render_message({"role": "assistant", "content": full_response, "timestamp": now_ts}, container=ai_placeholder)
 
     except Exception as exc:
