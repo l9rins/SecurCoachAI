@@ -136,10 +136,6 @@ def apply_query_auth() -> None:
         logger.error(f"Failed to remove token from URL: {e}")
         # If removal fails, at least we have processed_token set to prevent loops
         return
-    
-    # Trigger rerun to show authenticated app without token in URL
-    logger.info("Triggering rerun to show authenticated app")
-    st.rerun()
 
 
 def get_user_email() -> str:
