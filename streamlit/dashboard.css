@@ -43,31 +43,40 @@ section[data-testid="stSidebar"] {
 }
 section[data-testid="stSidebar"] * { color: var(--text1) !important; }
 
-/* ── Chat messages ── */
+/* ── Chat messages (Premium Animation & Depth) ── */
+@keyframes slideUpFade {
+    0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .msg-user, .msg-ai {
-    padding: 16px 20px;
+    padding: 18px 24px;
     border-radius: var(--radius);
-    margin-bottom: 16px;
-    font-size: .95rem;
-    line-height: 1.7;
+    margin-bottom: 20px;
+    font-size: 0.98rem;
+    line-height: 1.8;
     position: relative;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(255, 255, 255, 0.02) inset;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: bottom center;
 }
 .msg-user:hover, .msg-ai:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(255, 255, 255, 0.04) inset;
 }
 .msg-user {
     background: var(--elevated);
-    border-left: 3px solid var(--accent);
-    margin-left: 3rem;
+    border-left: 4px solid var(--accent);
+    margin-left: 4rem;
 }
 .msg-ai {
-    background: linear-gradient(135deg, rgba(138,209,200,.08) 0%, rgba(138,209,200,.02) 100%);
-    border-left: 3px solid var(--accent2);
-    margin-right: 3rem;
-    backdrop-filter: blur(4px);
+    background: linear-gradient(145deg, rgba(138,209,200,0.08) 0%, rgba(18,22,33,0.8) 100%);
+    border: 1px solid rgba(138,209,200,0.1);
+    border-left: 4px solid var(--accent2);
+    margin-right: 4rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 .msg-meta {
     font-size: .73rem;
@@ -80,20 +89,40 @@ code { font-family: 'JetBrains Mono', monospace !important; font-size: .85em !im
 pre  { background: rgba(0,0,0,0.3) !important; border: 1px solid var(--border) !important;
        border-radius: 8px !important; padding: 16px !important; overflow-x: auto !important; }
 
-/* ── Inputs (Glow on focus) ── */
-div[data-testid="stTextInput"] input,
-div[data-testid="stChatInput"] textarea {
+/* ── Inputs (Floating Glassmorphism) ── */
+div[data-testid="stTextInput"] input {
     background: var(--elevated) !important;
     border: 1px solid var(--border) !important;
     border-radius: var(--radius) !important;
     color: var(--text1) !important;
-    font-family: 'Inter', sans-serif !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.3s ease !important;
 }
-div[data-testid="stTextInput"] input:focus,
-div[data-testid="stChatInput"] textarea:focus {
+div[data-testid="stTextInput"] input:focus {
     border-color: var(--accent) !important;
     box-shadow: 0 0 0 4px var(--accent-glow) !important;
+}
+
+div[data-testid="stChatInput"] {
+    background: transparent !important;
+    padding-bottom: 1.5rem !important;
+}
+div[data-testid="stChatInput"] textarea {
+    background: rgba(18, 22, 33, 0.7) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 24px !important;
+    padding: 16px 24px !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(255, 255, 255, 0.05) inset !important;
+    color: var(--text1) !important;
+    font-size: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+div[data-testid="stChatInput"] textarea:focus {
+    background: rgba(18, 22, 33, 0.9) !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--accent) inset, 0 0 24px var(--accent-glow) !important;
+    transform: translateY(-2px) !important;
 }
 
 /* ── Buttons ── */
