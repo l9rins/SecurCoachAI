@@ -94,16 +94,22 @@ def apply_query_auth() -> None:
     token = st.query_params.get("token", "").strip()
     if not token:
         return
+    
+    # Prevent infinite redirect loops on Streamlit Cloud
+    if st.session_state.get("processed_token") == token:
+        return
+
     email = verify_jwt(token)
     if email:
         st.session_state.is_authenticated = True
         st.session_state.auth_user_email = email
         st.session_state.conversation_loaded = False
-        # Remove token from URL after consuming it
+        st.session_state["processed_token"] = token
         try:
+            # Attempt to clear the URL, but don't crash or loop if it fails
             st.query_params.clear()
         except Exception as e:
-            logger.warning(f"Failed to clear token from URL: {e}. JWT may remain visible in browser address bar.")
+            logger.warning(f"Failed to clear token from URL: {e}")
 
 
 def get_user_email() -> str:
