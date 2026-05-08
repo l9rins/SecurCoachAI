@@ -437,7 +437,7 @@ if db_err:
 st.divider()
 
 # ── Suggested questions (when chat is empty) ──────────────────────────────────
-if not st.session_state.messages:
+if not st.session_state.messages and not st.session_state.get("pending_prompt"):
     suggestions = llm_engine.get_suggestions(st.session_state.selected_domain, lab_mode=st.session_state.lab_mode)
     if suggestions:
         mode_label = "Lab challenges" if st.session_state.lab_mode else "Getting started"
