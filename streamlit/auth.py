@@ -18,6 +18,12 @@ except ImportError:
 import config
 
 
+@st.cache_data(ttl=3600)
+def _get_jwks(url: str):
+    import urllib.request, json
+    with urllib.request.urlopen(url) as r:
+        return json.loads(r.read())
+
 def verify_jwt(token: str) -> str | None:
     if not token:
         return None
@@ -45,8 +51,7 @@ def verify_jwt(token: str) -> str | None:
             import urllib.request, json
             supabase_url = config.supabase_url()
             jwks_url = f"{supabase_url}/auth/v1/.well-known/jwks.json"
-            with urllib.request.urlopen(jwks_url) as r:
-                jwks = json.loads(r.read())
+            jwks = _get_jwks(jwks_url)
             from jwt.algorithms import ECAlgorithm
             kid = header.get("kid")
             key_data = next(

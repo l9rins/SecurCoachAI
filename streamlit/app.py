@@ -171,7 +171,8 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
     ts    = msg.get("timestamp", "")
     raw_content = msg["content"]
 
-    target = container or st
+    # Use a sub-container if a target container is provided, so multiple elements don't overwrite each other.
+    target = container.container() if container else st
 
     if role == "user":
         # Always escape user content to avoid HTML injection
@@ -593,7 +594,12 @@ if prompt:
 
         # Set conversation title on first exchange
         if is_first_exchange:
-            title = extracted_title or llm_engine.generate_title(prompt)
+            if extracted_title:
+                title = extracted_title
+            else:
+                words = prompt.split()
+                title = " ".join(words[:5]) + ("..." if len(words) > 5 else "")
+            
             db.update_conversation_title(
                 user_email, st.session_state.current_conversation_id, title
             )
