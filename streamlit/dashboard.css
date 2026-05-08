@@ -19,8 +19,8 @@
     --radius:   12px;
 }
 
-/* ── Hide Streamlit Chrome for true App feel ── */
-#MainMenu, footer { visibility: hidden !important; height: 0 !important; }
+/* ── Streamlit Chrome (Restored for stability on Cloud) ── */
+/* #MainMenu, footer { visibility: hidden !important; height: 0 !important; } */
 
 /* ── Custom Scrollbar ── */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
