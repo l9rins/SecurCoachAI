@@ -20,6 +20,8 @@ export default function SignupLayout({ onSwitchToLogin }) {
   const [apiError, setApiError] = useState("");
   const [loading, setLoading]   = useState(false);
   const [success, setSuccess]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -165,39 +167,59 @@ export default function SignupLayout({ onSwitchToLogin }) {
             {errors.email && <span id="email-error" className="field-error">{errors.email}</span>}
           </div>
 
-          <div className="field-row">
-            <div className="field-group">
-              <label className="field-label" htmlFor="su-password">Password</label>
-              <input
-                id="su-password"
-                className={`field-input${errors.password ? " field-input--error" : ""}`}
-                type="password"
-                placeholder="8+ characters"
-                value={form.password}
-                onChange={(e) => update("password", e.target.value)}
-                autoComplete="new-password"
-                disabled={loading}
-                aria-describedby={errors.password ? "password-error" : undefined}
-              />
-              {errors.password && <span id="password-error" className="field-error">{errors.password}</span>}
-            </div>
+            <div className="field-row">
+              <div className="field-group">
+                <label className="field-label" htmlFor="su-password">Password</label>
+                <div className="password-input-wrapper" style={{ position: "relative" }}>
+                  <input
+                    id="su-password"
+                    className={`field-input${errors.password ? " field-input--error" : ""}`}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="8+ characters"
+                    value={form.password}
+                    onChange={(e) => update("password", e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                    aria-describedby={errors.password ? "password-error password-hint-su" : "password-hint-su"}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={showPassword ? "ph ph-eye-slash" : "ph ph-eye"}></i>
+                  </button>
+                </div>
+                {errors.password && <div id="password-error" className="field-error">{errors.password}</div>}
+              </div>
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="confirm">Confirm password</label>
-              <input
-                id="confirm"
-                className={`field-input${errors.confirm ? " field-input--error" : ""}`}
-                type="password"
-                placeholder="Repeat password"
-                value={form.confirm}
-                onChange={(e) => update("confirm", e.target.value)}
-                autoComplete="new-password"
-                disabled={loading}
-                aria-describedby={errors.confirm ? "confirm-error" : undefined}
-              />
-              {errors.confirm && <span id="confirm-error" className="field-error">{errors.confirm}</span>}
+              <div className="field-group">
+                <label className="field-label" htmlFor="su-confirmPassword">Confirm</label>
+                <div className="password-input-wrapper" style={{ position: "relative" }}>
+                  <input
+                    id="su-confirmPassword"
+                    className={`field-input${errors.confirmPassword ? " field-input--error" : ""}`}
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Repeat password"
+                    value={form.confirmPassword}
+                    onChange={(e) => update("confirmPassword", e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                    aria-describedby={errors.confirmPassword ? "confirm-error" : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={showConfirmPassword ? "ph ph-eye-slash" : "ph ph-eye"}></i>
+                  </button>
+                </div>
+                {errors.confirmPassword && <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
+              </div>
             </div>
-          </div>
 
           <button className="auth-btn" type="submit" disabled={loading} aria-label="Create new account">
             {loading ? (

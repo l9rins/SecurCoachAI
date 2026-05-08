@@ -190,6 +190,7 @@ body::after {
   background: none; border: none; color: var(--color-text-muted);
   cursor: pointer; font-size: 18px; padding: 4px; display: flex; align-items: center; justify-content: center;
   transition: color var(--transition-fast);
+  z-index: 10;
 }
 .password-toggle-btn:hover { color: var(--color-text-bright); }
 
