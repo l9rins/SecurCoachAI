@@ -59,3 +59,9 @@ def react_app_url() -> str:
 
 def chat_history_table() -> str:
     return _get("SUPABASE_CHAT_HISTORY_TABLE", "chat_history")
+
+def quiz_results_table() -> str:
+    return _get("SUPABASE_QUIZ_RESULTS_TABLE", "quiz_results")
+
+def completed_topics_table() -> str:
+    return _get("SUPABASE_COMPLETED_TOPICS_TABLE", "completed_topics")

@@ -211,10 +211,10 @@ def save_quiz_result(user_id: str, domain: str, score: int, total: int) -> None:
         f"user_id=eq.{quote(user_id, safe='')}"
         f"&domain=eq.{quote(domain, safe='')}"
     )
-    _req("DELETE", "quiz_results", query=query, extra_headers={"Prefer": "return=minimal"})
+    _req("DELETE", config.quiz_results_table(), query=query, extra_headers={"Prefer": "return=minimal"})
     _req(
         "POST",
-        "quiz_results",
+        config.quiz_results_table(),
         payload={"user_id": user_id, "domain": domain, "score": score, "total": total},
         extra_headers={"Prefer": "return=minimal"},
     )
@@ -227,7 +227,7 @@ def get_quiz_results(user_id: str) -> list[dict]:
         f"&user_id=eq.{quote(user_id, safe='')}"
         f"&order=created_at.desc"
     )
-    rows = _req("GET", "quiz_results", query=query)
+    rows = _req("GET", config.quiz_results_table(), query=query)
     if not isinstance(rows, list):
         return []
     # Deduplicate: keep best per domain
@@ -246,7 +246,7 @@ def save_topic_completion(user_id: str, domain: str, topic_id: str) -> None:
     """Mark a topic as completed."""
     _req(
         "POST",
-        "completed_topics",
+        config.completed_topics_table(),
         payload={"user_id": user_id, "domain": domain, "topic_id": topic_id},
         extra_headers={"Prefer": "return=minimal"},
     )
@@ -258,7 +258,7 @@ def remove_topic_completion(user_id: str, topic_id: str) -> None:
         f"user_id=eq.{quote(user_id, safe='')}"
         f"&topic_id=eq.{quote(topic_id, safe='')}"
     )
-    _req("DELETE", "completed_topics", query=query, extra_headers={"Prefer": "return=minimal"})
+    _req("DELETE", config.completed_topics_table(), query=query, extra_headers={"Prefer": "return=minimal"})
 
 
 def get_completed_topics(user_id: str) -> list[str]:
@@ -267,7 +267,7 @@ def get_completed_topics(user_id: str) -> list[str]:
         f"select=topic_id"
         f"&user_id=eq.{quote(user_id, safe='')}"
     )
-    rows = _req("GET", "completed_topics", query=query)
+    rows = _req("GET", config.completed_topics_table(), query=query)
     if not isinstance(rows, list):
         return []
     return [str(r.get("topic_id", "")) for r in rows if r.get("topic_id")]
