@@ -193,40 +193,38 @@ def _render_message(msg: dict, container: st.delta_generator.DeltaGenerator | No
         f'</div>'
     )
 
-    # Start the AI message container and header
-    target.markdown(f'<div class="msg-ai">{header_html}', unsafe_allow_html=True)
+    # Start the AI message container and header inside a native Streamlit block to prevent orphaned <div> tags
+    with target.container(border=True):
+        st.markdown(f'<div class="ai-msg-flag" style="display:none"></div>{header_html}', unsafe_allow_html=True)
 
-    # Split raw content into alternating non-code and code blocks (```...```) so we can render each appropriately
-    import re
-    parts = re.split(r'(```[\s\S]*?```)', raw_content)
-    for part in parts:
-        if not part:
-            continue
-        if part.startswith('```'):
-            # Extract optional language and code body
-            m = re.match(r'```(\w+)?\n([\s\S]*?)```', part)
-            if m:
-                lang = m.group(1) or None
-                code_body = m.group(2)
+        # Split raw content into alternating non-code and code blocks (```...```) so we can render each appropriately
+        import re
+        parts = re.split(r'(```[\s\S]*?```)', raw_content)
+        for part in parts:
+            if not part:
+                continue
+            if part.startswith('```'):
+                # Extract optional language and code body
+                m = re.match(r'```(\w+)?\n([\s\S]*?)```', part)
+                if m:
+                    lang = m.group(1) or None
+                    code_body = m.group(2)
+                else:
+                    # Fallback: strip backticks
+                    code_body = part.strip('`')
+                    lang = None
+                # Render code block using Streamlit's code renderer (preserves raw content)
+                try:
+                    st.code(code_body, language=lang)
+                except Exception:
+                    # As a fallback, render inside a pre tag
+                    safe_code = html_lib.escape(code_body)
+                    st.markdown(f'<pre style="white-space:pre-wrap">{safe_code}</pre>', unsafe_allow_html=True)
             else:
-                # Fallback: strip backticks
-                code_body = part.strip('`')
-                lang = None
-            # Render code block using Streamlit's code renderer (preserves raw content)
-            try:
-                target.code(code_body, language=lang)
-            except Exception:
-                # As a fallback, render inside a pre tag
-                safe_code = html_lib.escape(code_body)
-                target.markdown(f'<pre style="white-space:pre-wrap">{safe_code}</pre>', unsafe_allow_html=True)
-        else:
-            # Non-code segment: clean response (converts markdown headers into styled HTML)
-            cleaned = _clean_response(part)
-            if cleaned and cleaned.strip():
-                target.markdown(cleaned, unsafe_allow_html=True)
-
-    # Close AI message container
-    target.markdown('</div>', unsafe_allow_html=True)
+                # Non-code segment: clean response (converts markdown headers into styled HTML)
+                cleaned = _clean_response(part)
+                if cleaned and cleaned.strip():
+                    st.markdown(cleaned, unsafe_allow_html=True)
 
 def _export_markdown() -> str:
     domain = st.session_state.get("selected_domain", "")
