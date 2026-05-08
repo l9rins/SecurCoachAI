@@ -307,7 +307,13 @@ if st.session_state.active_page == "📊 Progress":
 # ── Chat page ─────────────────────────────────────────────────────────────────
 header_col, chip_col = st.columns([6, 2])
 with header_col:
-    st.markdown("# SecurCoach AI")
+    st.markdown(
+        "<div class='hero-header'>"
+        "<h1>🛡️ SecurCoach AI</h1>"
+        "<p>Your personalized, elite cybersecurity mentor.</p>"
+        "</div>", 
+        unsafe_allow_html=True
+    )
 with chip_col:
     chips_html = (
         f"<div style='padding-top:18px;text-align:right'>"

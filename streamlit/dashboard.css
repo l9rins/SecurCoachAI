@@ -172,11 +172,17 @@ div[data-testid="stSelectbox"] > div > div:hover {
     color: var(--accent);
     background: var(--accent-glow);
 }
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 0 0 rgba(138, 209, 200, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(138, 209, 200, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(138, 209, 200, 0); }
+}
 .lab-chip {
     border: 1px solid var(--accent2);
     color: var(--accent2);
     background: var(--accent2-glow);
     margin-left: 8px;
+    animation: pulseGlow 2.5s infinite;
 }
 
 /* ── Banners ── */
@@ -200,6 +206,16 @@ div[data-testid="stSelectbox"] > div > div:hover {
     font-style: italic;
 }
 
+/* ── Hero Header ── */
+.hero-header { margin-bottom: 0.5rem; }
+.hero-header p {
+    color: var(--text2);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-top: -12px;
+    letter-spacing: 0.2px;
+}
+
 /* ── Animated Header ── */
 @keyframes gradientShift {
     0% { background-position: 0% 50%; }
@@ -215,6 +231,7 @@ h1 {
     -webkit-background-clip: text !important; 
     -webkit-text-fill-color: transparent !important; 
     letter-spacing: -0.5px;
+    margin-bottom: 12px !important;
 }
 h2, h3 { 
     font-family: 'Syne', sans-serif !important; 
