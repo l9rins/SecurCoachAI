@@ -304,12 +304,17 @@ with st.sidebar:
     
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
+    # Lab Mode Toggle Callback
+    def _on_lab_mode_change():
+        if st.session_state.get("messages"):
+            st.toast("Switched Lab Mode. Start a new conversation for a fresh scenario.", icon="🧪")
+
     # Lab Mode Toggle
-    new_lab_mode = st.toggle("🧪 Hands-On Lab Mode", value=st.session_state.lab_mode)
-    if new_lab_mode != st.session_state.lab_mode:
-        st.session_state.lab_mode = new_lab_mode
-        if st.session_state.messages:
-            st.warning("Switched to Lab Mode. Start a new conversation to receive a fresh scenario.")
+    st.toggle(
+        "🧪 Hands-On Lab Mode",
+        key="lab_mode",
+        on_change=_on_lab_mode_change
+    )
 
     st.divider()
 
