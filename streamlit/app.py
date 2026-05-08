@@ -494,4 +494,4 @@ if prompt:
             st.session_state.current_conv_title = title
             _refresh_conversations(force=True)
 
-    st.rerun()
+
