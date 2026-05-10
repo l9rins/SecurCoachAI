@@ -302,9 +302,9 @@ with st.sidebar:
             help="Switch between different models.",
             label_visibility="collapsed"
         )
-            # RAG / Agent toggles
-            st.session_state.rag_enabled = st.checkbox("Enable Retrieval (RAG)", value=st.session_state.get("rag_enabled", False), help="Allow the assistant to reference uploaded documents.")
-            st.session_state.agent_enabled = st.checkbox("Enable Agentic Tools", value=st.session_state.get("agent_enabled", False), help="Allow the assistant to use limited external tools (safe demo tools).")
+        # RAG / Agent toggles
+        st.session_state.rag_enabled = st.checkbox("Enable Retrieval (RAG)", value=st.session_state.get("rag_enabled", False), help="Allow the assistant to reference uploaded documents.")
+        st.session_state.agent_enabled = st.checkbox("Enable Agentic Tools", value=st.session_state.get("agent_enabled", False), help="Allow the assistant to use limited external tools (safe demo tools).")
     
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
