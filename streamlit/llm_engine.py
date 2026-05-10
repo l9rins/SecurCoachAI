@@ -9,6 +9,9 @@ from groq import Groq
 import streamlit as st
 
 import config
+import rag
+import re as _re
+import observability
 
 # ── Models & Domains (Top-level for immediate init) ───────────────────────────
 
@@ -253,6 +256,35 @@ def _get_client() -> Groq:
     return st.session_state["groq_client"]
 
 
+def sanitize_input(text: str) -> tuple[str, list[str]]:
+    """Basic prompt-hijack defenses: remove suspicious instruction patterns and
+    return a cleaned string plus list of warnings if any issues detected."""
+    warnings: list[str] = []
+    if not text:
+        return text, warnings
+
+    # detect attempts to break system prompts or injection patterns
+    patterns = [
+        r"ignore (previous|prior) instructions",
+        r"disregard all previous",
+        r"follow only the instructions",
+        r"odr:.*system prompt",
+        r"you are now (.*) assistant",
+    ]
+    lowered = text.lower()
+    for p in patterns:
+        if _re.search(p, lowered):
+            warnings.append("Detected potential prompt injection. Sanitized user input.")
+            # neutralize by removing the matched phrase
+            text = _re.sub(p, "", text, flags=_re.IGNORECASE)
+
+    # strip suspicious code-block system markers
+    text = _re.sub(r"^\s*system:\s*", "", text, flags=_re.IGNORECASE)
+    # final trim
+    text = text.strip()
+    return text, warnings
+
+
 def _build_messages(messages: list[dict], domain: str, lab_mode: bool = False) -> list[dict]:
     """Build the full message list: system prompt + last 20 turns."""
     if lab_mode:
@@ -263,7 +295,27 @@ def _build_messages(messages: list[dict], domain: str, lab_mode: bool = False) -
     for msg in messages[-20:]:
         role = "user" if msg["role"] == "user" else "assistant"
         history.append({"role": role, "content": msg["content"]})
-    return [{"role": "system", "content": system_prompt}] + history
+    built = [{"role": "system", "content": system_prompt}] + history
+
+    # If RAG is enabled in the session, perform a retrieval and attach top results
+    try:
+        if st.session_state.get("rag_enabled"):
+            # use the last user message as the retrieval query when available
+            last_user = next((m for m in reversed(messages) if m.get("role") == "user"), None)
+            if last_user:
+                query = last_user.get("content", "")
+                results = rag.retrieve(query, top_k=3)
+                if results:
+                    docs_text = "\n\n".join([f"[source {i}] (score={s:.3f})\n{t}" for i, s, t in results])
+                    retrieval_block = (
+                        "The following documents are relevant to the user's query. Use them to ground answers:\n\n" + docs_text
+                    )
+                    built.insert(1, {"role": "system", "content": retrieval_block})
+    except Exception:
+        # Fail silently on retrieval errors — don't block normal chat
+        pass
+
+    return built
 
 
 def stream_response(messages: list[dict], request_title: bool = False) -> Generator[str, None, None]:
@@ -280,6 +332,18 @@ def stream_response(messages: list[dict], request_title: bool = False) -> Genera
     client = _get_client()
     lab_mode = st.session_state.get("lab_mode", False)
     built  = _build_messages(messages, domain, lab_mode=lab_mode)
+    model_id = get_model()
+    trace = observability.start_trace(
+        name="securcoach.chat",
+        user_id=st.session_state.get("user_email"),
+        metadata={
+            "domain": domain,
+            "lab_mode": lab_mode,
+            "rag_enabled": bool(st.session_state.get("rag_enabled")),
+            "agent_enabled": bool(st.session_state.get("agent_enabled")),
+            "request_title": request_title,
+        },
+    )
 
     if request_title:
         built.append({
@@ -291,18 +355,119 @@ def stream_response(messages: list[dict], request_title: bool = False) -> Genera
             ),
         })
 
+    observability.log_generation(
+        trace=trace,
+        name="input_built",
+        model=model_id,
+        input_payload=built,
+        output_payload=None,
+        metadata={"phase": "pre_inference"},
+    )
+
+    # If agent mode is enabled, perform a simple agent loop: ask the model (non-streaming)
+    # and look for tool call tags. Supported tool: search_docs. If a tool call is found,
+    # execute it and re-query the model with the tool output appended.
+    if st.session_state.get("agent_enabled"):
+        try:
+            resp = client.chat.completions.create(
+                model=model_id,
+                messages=built,
+                max_tokens=2048,
+                temperature=0.7,
+            )
+            text = resp.choices[0].message.content
+        except Exception:
+            # fallback to streaming mode on error
+            text = ""
+
+        # Look for tool call tags like: <CALL_TOOL name="search_docs">query</CALL_TOOL>
+        TOOL_PATTERN = _re.compile(r'<CALL_TOOL name="(?P<name>\w+)">(?P<arg>.*?)</CALL_TOOL>', _re.DOTALL)
+        m = TOOL_PATTERN.search(text or "")
+        if m:
+            tool = m.group("name")
+            arg = m.group("arg").strip()
+            tool_output = ""
+            if tool == "search_docs":
+                results = rag.retrieve(arg, top_k=3)
+                if results:
+                    tool_output = "\n\n".join([f"[source {i}] (score={s:.3f})\n{t}" for i, s, t in results])
+                else:
+                    tool_output = "(no relevant documents found)"
+            else:
+                tool_output = f"(unsupported tool: {tool})"
+
+            observability.log_tool_call(
+                trace=trace,
+                tool_name=tool,
+                tool_input=arg,
+                tool_output=tool_output,
+            )
+
+            # Append the tool output to the conversation and re-query the model for a final answer
+            built.append({"role": "system", "content": f"TOOL_RESULT for {tool}:\n{tool_output}"})
+            try:
+                final = client.chat.completions.create(
+                    model=model_id,
+                    messages=built,
+                    max_tokens=2048,
+                    temperature=0.7,
+                )
+                final_text = final.choices[0].message.content
+                observability.log_generation(
+                    trace=trace,
+                    name="agent_final",
+                    model=model_id,
+                    input_payload=built,
+                    output_payload=final_text,
+                    metadata={"phase": "agent_final"},
+                )
+                observability.flush()
+                yield final_text
+                return
+            except Exception:
+                # fall through to streaming fallback
+                pass
+
+        # If no tool called or agent flow failed, yield the initial text (or fallback to streaming)
+        if text:
+            observability.log_generation(
+                trace=trace,
+                name="agent_single_pass",
+                model=model_id,
+                input_payload=built,
+                output_payload=text,
+                metadata={"phase": "agent_single_pass"},
+            )
+            observability.flush()
+            yield text
+            return
+
+    # Default: streaming path
     stream = client.chat.completions.create(
-        model=get_model(),
+        model=model_id,
         messages=built,
         stream=True,
         max_tokens=4096,
         temperature=0.7,
     )
 
+    chunks: list[str] = []
+
     for chunk in stream:
         text = chunk.choices[0].delta.content
         if text:
+            chunks.append(text)
             yield text
+
+    observability.log_generation(
+        trace=trace,
+        name="streaming_chat",
+        model=model_id,
+        input_payload=built,
+        output_payload="".join(chunks),
+        metadata={"phase": "streaming"},
+    )
+    observability.flush()
 
 
 

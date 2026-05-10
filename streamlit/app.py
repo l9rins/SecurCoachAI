@@ -22,6 +22,7 @@ import db
 import llm_engine
 import quiz
 import progress
+import rag
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -301,6 +302,9 @@ with st.sidebar:
             help="Switch between different models.",
             label_visibility="collapsed"
         )
+            # RAG / Agent toggles
+            st.session_state.rag_enabled = st.checkbox("Enable Retrieval (RAG)", value=st.session_state.get("rag_enabled", False), help="Allow the assistant to reference uploaded documents.")
+            st.session_state.agent_enabled = st.checkbox("Enable Agentic Tools", value=st.session_state.get("agent_enabled", False), help="Allow the assistant to use limited external tools (safe demo tools).")
     
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
 
@@ -318,6 +322,29 @@ with st.sidebar:
     )
 
     st.divider()
+
+    # Document uploader for RAG
+    st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown("<small style='color:var(--color-text-muted)'>Upload documents to index for RAG:</small>", unsafe_allow_html=True)
+        uploaded = st.file_uploader("Upload text files (txt, md) or paste content", accept_multiple_files=True, type=["txt","md"] )
+        if uploaded:
+            texts = []
+            for f in uploaded:
+                try:
+                    raw = f.getvalue().decode("utf-8")
+                except Exception:
+                    raw = str(f.getvalue())
+                texts.append(raw)
+            if texts and st.button("Index uploaded documents", use_container_width=True, key="index_docs"):
+                rag.index_texts(texts)
+                st.toast(f"Indexed {len(texts)} document(s)")
+                st.rerun()
+
+        if st.button("Clear indexed documents", key="clear_docs"):
+            rag.clear_store()
+            st.toast("Cleared indexed documents")
+            st.rerun()
 
     # New conversation
     if st.button("＋  New conversation", use_container_width=True):
@@ -503,7 +530,12 @@ if prompt:
     now_ts = datetime.now().strftime("%H:%M")
 
     # Add user message
-    user_msg = {"role": "user", "content": prompt, "timestamp": now_ts}
+    # Sanitize user input to defend against prompt injections
+    cleaned_prompt, warnings = llm_engine.sanitize_input(prompt)
+    if warnings:
+        for w in warnings:
+            st.warning(w)
+    user_msg = {"role": "user", "content": cleaned_prompt, "timestamp": now_ts}
     st.session_state.messages.append(user_msg)
     db.save_message(
         user_email,

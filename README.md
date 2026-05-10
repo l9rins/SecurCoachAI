@@ -1,3 +1,96 @@
+# SecurCoach AI — Upgraded Chatbot (RAG + Agent)
+
+This repository contains the SecurCoach AI Streamlit application updated for the course final.
+The app now includes:
+
+- Retrieval-Augmented Generation (RAG) via a lightweight local vector store (`streamlit/rag.py`).
+- A minimal agentic loop that lets the model call a safe `search_docs` tool (backed by the RAG store).
+- Prompt-hijack defenses: input sanitization implemented in `streamlit/llm_engine.py`.
+
+This README documents how to run, test, and what to include in the presentation.
+
+## Quick Start (local)
+
+1. Create a virtual environment and install dependencies:
+
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate
+python -m pip install -r requirements.txt
+```
+
+2. Run the Streamlit app:
+
+```bash
+streamlit run streamlit/app.py
+```
+
+3. In the app sidebar > Advanced Settings:
+- Enable `Enable Retrieval (RAG)` to allow document grounding.
+- (Optional) Enable `Enable Agentic Tools` to allow the model to call `search_docs` tool.
+
+4. Upload one or more `.txt` or `.md` files and click `Index uploaded documents` to add them to the local vectorstore.
+
+5. Ask the model questions related to the uploaded documents. The assistant will ground answers with retrieved passages.
+
+## Langfuse Prompt Tracing (Optional)
+
+Langfuse integration is now built in and optional. If keys are not provided,
+the app runs normally and tracing is skipped.
+
+Set these environment variables (or add them to Streamlit secrets):
+
+```bash
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+What is traced:
+- Base chat generation requests (`streaming_chat`)
+- Agent single-pass responses (`agent_single_pass`)
+- Agent final responses after tool call (`agent_final`)
+- Tool span calls (`tool:search_docs`)
+
+Implementation files:
+- `streamlit/observability.py` (Langfuse wrapper)
+- `streamlit/config.py` (optional Langfuse accessors)
+- `streamlit/llm_engine.py` (trace + span instrumentation)
+
+## Files Added/Modified
+
+- `streamlit/rag.py` — simple vector store using `sentence-transformers` and `numpy`.
+- `streamlit/llm_engine.py` — integrated retrieval into `_build_messages`, added `sanitize_input`, and added a simple agent loop that executes `<CALL_TOOL name="search_docs">query</CALL_TOOL>` tool calls.
+- `streamlit/app.py` — sidebar toggles for RAG/Agent, uploader and index/clear controls; sanitizes user input before sending.
+- `requirements.txt` — added `sentence-transformers` and `numpy`.
+- `streamlit/observability.py` — optional Langfuse tracing helper.
+
+## Security & Prompt Defenses
+
+- All user inputs are sanitized with `sanitize_input()` to remove common injection patterns.
+- The agent only supports a single safe tool `search_docs` which is read-only and returns retrieved documents — no arbitrary code execution.
+- User content is HTML-escaped in the UI to prevent injection.
+
+## Testing Checklist
+
+- [ ] Install dependencies and run the app locally.
+- [ ] Enable RAG and upload sample docs (policy, notes, or README files).
+- [ ] Query content in uploaded docs and confirm retrieved passages appear in the model's context.
+- [ ] Enable agent mode and craft prompts that instruct the assistant to call `search_docs`; confirm the assistant calls the tool and returns a grounded final answer.
+
+## Deliverables
+
+- Presentation slides: see `PRESENTATION_SLIDES.md` (outline + speaker notes). You can convert this markdown to PPTX/PDF via `pandoc` or copy the content into your preferred slide editor.
+- Public GitHub repo: push this workspace to a public repository and include a link in your submission.
+- Streamlit app URL: deploy on Streamlit Cloud (or similar) and include the public link in your submission.
+
+## Next Steps I can do for you
+
+- Run a smoke test in this environment (I cannot run the app here, but I can create automated unit tests). 
+- Add Langfuse integration for prompt versioning and tracing.
+- Create a `.pptx` slide deck programmatically (requires adding `python-pptx` and running locally).
+
+If you want me to generate the slide deck `.pptx` file here, say so and I will add a script and the content; you'll need to run it locally to produce the binary.
 <div align="center">
 
 # 🛡️ SecurCoach AI

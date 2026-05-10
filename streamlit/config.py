@@ -65,3 +65,12 @@ def quiz_results_table() -> str:
 
 def completed_topics_table() -> str:
     return _get("SUPABASE_COMPLETED_TOPICS_TABLE", "completed_topics")
+
+def langfuse_public_key() -> str:
+    return _get("LANGFUSE_PUBLIC_KEY")
+
+def langfuse_secret_key() -> str:
+    return _get("LANGFUSE_SECRET_KEY")
+
+def langfuse_host() -> str:
+    return _get("LANGFUSE_HOST", "https://cloud.langfuse.com")
