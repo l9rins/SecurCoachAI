@@ -24,9 +24,8 @@ export default function LoginLayout({ onSwitchToSignup }) {
   function validate() {
     const e = {};
     const emailErr = validateEmail(form.email);
-    const passErr  = validatePassword(form.password);
-    if (emailErr) e.email    = emailErr;
-    if (passErr)  e.password = passErr;
+    if (emailErr) e.email = emailErr;
+    if (!form.password) e.password = "Password is required.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }

@@ -199,14 +199,14 @@ export default function SignupLayout({ onSwitchToLogin }) {
                 <div className="password-input-wrapper" style={{ position: "relative" }}>
                   <input
                     id="su-confirmPassword"
-                    className={`field-input${errors.confirmPassword ? " field-input--error" : ""}`}
+                    className={`field-input${errors.confirm ? " field-input--error" : ""}`}
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Repeat password"
-                    value={form.confirmPassword}
-                    onChange={(e) => update("confirmPassword", e.target.value)}
+                    value={form.confirm}
+                    onChange={(e) => update("confirm", e.target.value)}
                     autoComplete="new-password"
                     disabled={loading}
-                    aria-describedby={errors.confirmPassword ? "confirm-error" : undefined}
+                    aria-describedby={errors.confirm ? "confirm-error" : undefined}
                   />
                   <button
                     type="button"
@@ -217,7 +217,7 @@ export default function SignupLayout({ onSwitchToLogin }) {
                     <i className={showConfirmPassword ? "ph ph-eye-slash" : "ph ph-eye"}></i>
                   </button>
                 </div>
-                {errors.confirmPassword && <div id="confirm-error" className="field-error">{errors.confirmPassword}</div>}
+                {errors.confirm && <div id="confirm-error" className="field-error">{errors.confirm}</div>}
               </div>
             </div>
 

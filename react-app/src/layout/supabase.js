@@ -15,14 +15,18 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Profile upsert ────────────────────────────────────────────────────────────
 
-async function upsertProfile(userId, email, name, username) {
+async function upsertProfile(userId, email, name) {
+  const payload = {
+    id:        userId,
+    email:     email.trim().toLowerCase(),
+  };
+  if (name) {
+    payload.full_name = name.trim();
+  }
   const { error } = await supabase
     .from(USERS_TABLE)
     .upsert(
-      {
-        id:        userId,
-        email:     email.trim().toLowerCase(),
-      },
+      payload,
       { onConflict: "id" }
     );
   if (error) throw new Error(error.message);
@@ -42,7 +46,8 @@ export async function signInUser({ email, password }) {
   try {
     await upsertProfile(
       user.id,
-      user.email
+      user.email,
+      user.user_metadata?.name
     );
   } catch (profileErr) {
     // Profile save failed but auth succeeded — warn, don't block
@@ -76,7 +81,7 @@ export async function signUpUser({ name, username, email, password }) {
     // is null and the anon key would be denied by RLS — so we skip silently.
     // signInUser will heal the missing profile row on first login.
     try {
-      await upsertProfile(user.id, normalizedEmail);
+      await upsertProfile(user.id, normalizedEmail, name);
     } catch (profileErr) {
       console.warn("Profile upsert skipped (expected when email confirmation is on):", profileErr.message);
     }
