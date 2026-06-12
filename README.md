@@ -1,103 +1,8 @@
-# SecurCoach AI — Upgraded Chatbot (RAG + Agent)
-
-This repository contains the SecurCoach AI Streamlit application updated for the course final.
-The app now includes:
-
-- Retrieval-Augmented Generation (RAG) via a lightweight local vector store (`streamlit/rag.py`).
-- A minimal agentic loop that lets the model call a safe `search_docs` tool (backed by the RAG store).
-- Prompt-hijack defenses: input sanitization implemented in `streamlit/llm_engine.py`.
-
-This README documents how to run, test, and what to include in the presentation.
-
-## Quick Start (local)
-
-1. Create a virtual environment and install dependencies:
-
-```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-python -m pip install -r requirements.txt
-```
-
-2. Run the Streamlit app:
-
-```bash
-streamlit run streamlit/app.py
-```
-
-3. In the app sidebar > Advanced Settings:
-- Enable `Enable Retrieval (RAG)` to allow document grounding.
-- (Optional) Enable `Enable Agentic Tools` to allow the model to call `search_docs` tool.
-
-4. Upload one or more `.txt` or `.md` files and click `Index uploaded documents` to add them to the local vectorstore.
-
-5. Ask the model questions related to the uploaded documents. The assistant will ground answers with retrieved passages.
-
-## Langfuse Prompt Tracing (Optional)
-
-Langfuse integration is now built in and optional. If keys are not provided,
-the app runs normally and tracing is skipped.
-
-Set these environment variables (or add them to Streamlit secrets):
-
-```bash
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=https://cloud.langfuse.com
-```
-
-What is traced:
-- Base chat generation requests (`streaming_chat`)
-- Agent single-pass responses (`agent_single_pass`)
-- Agent final responses after tool call (`agent_final`)
-- Tool span calls (`tool:search_docs`)
-
-Implementation files:
-- `streamlit/observability.py` (Langfuse wrapper)
-- `streamlit/config.py` (optional Langfuse accessors)
-- `streamlit/llm_engine.py` (trace + span instrumentation)
-
-## Files Added/Modified
-
-- `streamlit/rag.py` — simple vector store using `sentence-transformers` and `numpy`.
-- `streamlit/llm_engine.py` — integrated retrieval into `_build_messages`, added `sanitize_input`, and added a simple agent loop that executes `<CALL_TOOL name="search_docs">query</CALL_TOOL>` tool calls.
-- `streamlit/app.py` — sidebar toggles for RAG/Agent, uploader and index/clear controls; sanitizes user input before sending.
-- `requirements.txt` — added `sentence-transformers` and `numpy`.
-- `streamlit/observability.py` — optional Langfuse tracing helper.
-
-## Security & Prompt Defenses
-
-- All user inputs are sanitized with `sanitize_input()` to remove common injection patterns.
-- The agent only supports a single safe tool `search_docs` which is read-only and returns retrieved documents — no arbitrary code execution.
-- User content is HTML-escaped in the UI to prevent injection.
-
-## Testing Checklist
-
-- [ ] Install dependencies and run the app locally.
-- [ ] Enable RAG and upload sample docs (policy, notes, or README files).
-- [ ] Query content in uploaded docs and confirm retrieved passages appear in the model's context.
-- [ ] Enable agent mode and craft prompts that instruct the assistant to call `search_docs`; confirm the assistant calls the tool and returns a grounded final answer.
-
-## Deliverables
-
-- Presentation slides: see `PRESENTATION_SLIDES.md` (outline + speaker notes). You can convert this markdown to PPTX/PDF via `pandoc` or copy the content into your preferred slide editor.
-- Public GitHub repo: push this workspace to a public repository and include a link in your submission.
-- Streamlit app URL: deploy on Streamlit Cloud (or similar) and include the public link in your submission.
-
-## Next Steps I can do for you
-
-- Run a smoke test in this environment (I cannot run the app here, but I can create automated unit tests). 
-- Add Langfuse integration for prompt versioning and tracing.
-- Create a `.pptx` slide deck programmatically (requires adding `python-pptx` and running locally).
-
-If you want me to generate the slide deck `.pptx` file here, say so and I will add a script and the content; you'll need to run it locally to produce the binary.
-<div align="center">
-
 # 🛡️ SecurCoach AI
 
-**An AI-powered cybersecurity training coach — learn security concepts through real, streaming conversations.**
+![SecurCoach AI Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&height=300&section=header&text=SecurCoach%20AI&fontSize=70&animation=fadeIn&fontAlignY=38&desc=Upgraded%20Cybersecurity%20Training%20Coach%20(RAG%20+%20Agent)&descAlignY=51&descSize=20)
 
-> **Note:** This project uses **Groq** (with Llama 3.3 70B) for AI responses, **not** Google Gemini.
+<div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
@@ -105,47 +10,63 @@ If you want me to generate the slide deck `.pptx` file here, say so and I will a
 [![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20DB-3ECF8E?style=flat-square&logo=supabase&logoColor=white)](https://supabase.com)
 [![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-F55036?style=flat-square&logo=meta&logoColor=white)](https://console.groq.com)
 
+**[Report Bug](#) • [Request Feature](#)**
+
 </div>
 
 ---
 
-## Table of Contents
+## 🚀 Overview
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-  - [React Environment Variables](#react--react-appenv)
-  - [Streamlit Secrets](#streamlit--streamlitsecretstoml)
-  - [Where to Find Each Key](#where-to-find-each-key)
-- [Supabase Database Setup](#supabase-database-setup)
-  - [users table](#users-table)
-  - [chat_history table](#chat_history-table)
-  - [A note on RLS and the service role key](#a-note-on-rls-and-the-service-role-key)
-- [Running the App](#running-the-app)
-- [Features](#features)
-- [Security Notes](#security-notes)
-- [Known Gotchas](#known-gotchas)
-- [Roadmap](#roadmap)
+**SecurCoach AI** is a full-stack cybersecurity learning platform that pairs a clean React authentication UI with a Streamlit AI chat dashboard. Users sign in via Supabase Auth, then get dropped into an interactive chat powered by **Llama 3.3 70B via Groq** — with streaming responses, persistent conversation history, AI-generated conversation titles, and domain-specific coaching across six security disciplines.
+
+**🎉 Course Final Upgrade:** The application now includes Retrieval-Augmented Generation (RAG) via a lightweight local vector store, a minimal agentic loop that safely calls a `search_docs` tool, and robust prompt-hijack defenses.
+
+> "An AI-powered cybersecurity training coach — learn security concepts through real, streaming conversations."
 
 ---
 
-## Overview
+## ✨ New Upgrades (Course Final)
 
-SecurCoach AI is a full-stack cybersecurity learning platform that pairs a clean React authentication UI with a Streamlit AI chat dashboard. Users sign in via Supabase Auth, then get dropped into an interactive chat powered by **Llama 3.3 70B via Groq** — with streaming responses, persistent conversation history, AI-generated conversation titles, and domain-specific coaching across six security disciplines.
+*   **Retrieval-Augmented Generation (RAG):** Implemented via a lightweight local vector store using `sentence-transformers` and `numpy`.
+*   **Minimal Agentic Loop:** Enables the model to call a safe, read-only `search_docs` tool backed by the RAG store.
+*   **Prompt-Hijack Defenses:** Robust input sanitization implemented to prevent prompt injection and XSS.
+*   **Langfuse Integration:** Built-in (but optional) prompt tracing and observability.
 
-```
+---
+
+## 🌟 Core Features
+
+### 🔐 Authentication
+*   Email + password signup with full client-side validation and strength enforcement.
+*   Server-side JWT signature verification via PyJWT; no plain-text email bypass.
+*   Password reset and email confirmation flows fully integrated.
+
+### 💬 Chat Dashboard
+*   **Six Security Domains:** General, Network, Web App, Cloud, Cryptography, and Incident Response.
+*   **Streaming Responses:** Text appears token-by-token.
+*   **Persistent History:** Chats stored in Supabase with AI-generated titles.
+*   **Multi-Model Selector:** Choose between Llama 3.3 70B, Llama 3.1 8B, and Mixtral 8x7B.
+
+### 🧪 Hands-On Lab Mode
+*   Toggle Lab Mode to switch from Q&A to hands-on security challenges.
+*   AI presents realistic vulnerable code, configs, or logs for you to identify and remediate.
+*   Evaluates responses and provides hints without revealing the answer upfront.
+
+### 📝 Skill Assessment & Progress
+*   **Quiz Mode:** 30 verified cybersecurity questions with instant grading and explanations.
+*   **Progress Dashboard:** Track scores, completed learning paths, and activity stats.
+
+---
+
+## 🏗️ Architecture
+
+```text
 User → React Login → Supabase Auth → JWT → Streamlit Dashboard → Groq AI (Llama 3.3)
                                               ↕
                                         Supabase DB
                                      (chat history, profiles)
 ```
-
----
-
-## Architecture
 
 | Layer | Technology | Role |
 |---|---|---|
@@ -155,463 +76,162 @@ User → React Login → Supabase Auth → JWT → Streamlit Dashboard → Groq 
 | **AI** | Llama 3.3 70B (via Groq) | Streaming cybersecurity coaching responses |
 | **Auth** | Supabase Auth + PyJWT | JWT-based, verified server-side |
 
-### How auth flows
-
-1. User logs in on the React app (port 3000)
-2. React calls Supabase Auth → gets a signed JWT access token
-3. React redirects to Streamlit with `?token=<jwt>` in the URL
-4. Streamlit verifies the JWT signature using `SUPABASE_JWT_SECRET` via PyJWT
-5. On success, the email is extracted from the token payload and stored in session state
-6. All subsequent Supabase queries are filtered server-side by that email
-
 ---
 
-## Project Structure
+## 📂 Project Structure
 
-```
+```text
 SecurCoachAI/
-│
 ├── react-app/                   # React frontend
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── App.js               # Root — switches between login/signup
-│   │   ├── index.js             # React entry point
-│   │   └── layout/
-│   │       ├── LoginLayout.js   # Login form with validation + loading states
-│   │       ├── SignupLayout.js  # Signup form, email confirmation screen
-│   │       ├── supabase.js      # Supabase SDK client, signIn, signUp helpers
-│   │       ├── validation.js    # Pure validation functions (email, password, etc.)
-│   │       └── auth.css         # Dark theme styles for auth UI
-│   ├── .env.example             # Copy to .env and fill in your keys
-│   └── package.json
-│
+│   ├── src/                     # React source files (App.js, layout, validation)
+│   └── .env.example             # React environment template
 ├── streamlit/                   # Streamlit backend
-│   ├── app.py                   # Main dashboard — UI, chat loop, session state
-│   ├── auth.py                  # JWT verification, session helpers, auth guard
-│   ├── chat.py                  # Groq client, streaming, title generation, lab mode
-│   ├── quiz.py                  # Skill assessment quiz (30 questions, 6 domains)
-│   ├── progress.py              # Progress dashboard & learning paths
-│   ├── db.py                    # All Supabase REST calls (conversations, quiz, progress)
-│   ├── config.py                # Secrets loader + startup validation
-│   └── dashboard.css            # External CSS with unified design tokens
-│
+│   ├── app.py                   # Main dashboard (UI, chat loop, sanitization)
+│   ├── auth.py                  # JWT verification & session helpers
+│   ├── chat.py                  # Groq client, streaming, lab mode
+│   ├── rag.py                   # Vector store (sentence-transformers & numpy)
+│   ├── llm_engine.py            # Retrieval integration, sanitization, agent loop
+│   ├── observability.py         # Optional Langfuse tracing wrapper
+│   └── ...                      # DB, quiz, progress, config modules
 ├── .streamlit/
-│   └── secrets.toml.example     # Copy to secrets.toml and fill in your keys
-│
-├── .gitignore
-├── requirements.txt
-├── start-dev.ps1                # Starts both services in separate PowerShell windows
-├── start-dev.bat                # Wrapper for start-dev.ps1
-└── README.md
+│   └── secrets.toml.example     # Streamlit secrets template
+└── requirements.txt             # Python dependencies
 ```
 
 ---
 
-## Prerequisites
+## 🛠️ Setup Instructions
 
-Make sure you have all of these before starting:
+### Prerequisites
+*   **Python 3.10+** and **Node.js 18+**
+*   **Supabase project** and **Groq API key**
 
-- **Python 3.10+** — [python.org/downloads](https://www.python.org/downloads/)
-- **Node.js 18+** — [nodejs.org](https://nodejs.org/)
-- **A Supabase project** — free tier works fine — [supabase.com](https://supabase.com)
-- **A Groq API key** — free tier works fine — [console.groq.com](https://console.groq.com)
+### 1. Quick Start (Local)
 
----
-
-## Installation
-
-### 1. Clone the repository
-
+Create a virtual environment and install dependencies:
 ```bash
-git clone https://github.com/your-username/SecurCoachAI.git
-cd SecurCoachAI
+python -m venv .venv
+.\.venv\Scripts\activate
+python -m pip install -r requirements.txt
 ```
 
-### 2. Install Python dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-The `requirements.txt` includes:
-
-| Package | Purpose |
-|---|---|
-| `streamlit>=1.35.0` | Web dashboard framework |
-| `groq>=0.9.0` | Groq API client (Llama 3.3 70B) |
-| `requests>=2.31.0` | Supabase REST calls from Python |
-| `PyJWT[crypto]>=2.8.0` | JWT signature verification |
-
-### 3. Install React dependencies
-
+Start the React Frontend:
 ```bash
 cd react-app
 npm install
-cd ..
+npm start
+# Running at http://localhost:3000
 ```
 
----
-
-## Configuration
-
-There are **two** config files to create — one for React, one for Streamlit. Neither should ever be committed to git (both are in `.gitignore`).
-
-### React — `react-app/.env`
-
-Copy the example and fill in your values:
-
+Start the Streamlit Backend:
 ```bash
-cp react-app/.env.example react-app/.env
+# In a new terminal
+python -m streamlit run streamlit/app.py
+# Running at http://localhost:8501
 ```
 
+> **Note:** Always navigate to **http://localhost:3000** to log in first. The auth token is passed to Streamlit automatically.
+
+### 2. Configuration
+
+**React Environment (`react-app/.env`)**
 ```env
 REACT_APP_SUPABASE_URL=https://your-project-ref.supabase.co
-REACT_APP_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+REACT_APP_SUPABASE_ANON_KEY=your-anon-key
 REACT_APP_SUPABASE_USERS_TABLE=users
 REACT_APP_STREAMLIT_URL=http://localhost:8501
 ```
 
-> ⚠️ **Only the `anon` key goes here.** This file is bundled into the browser
-> build and is publicly visible. Never put the service role key in `.env`.
-
-### Streamlit — `.streamlit/secrets.toml`
-
-Copy the example and fill in your values:
-
-```bash
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-```
-
+**Streamlit Secrets (`.streamlit/secrets.toml`)**
 ```toml
 GROQ_API_KEY                = "gsk_..."
 SUPABASE_URL                = "https://your-project-ref.supabase.co"
-SUPABASE_KEY                = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  # service_role key
+SUPABASE_KEY                = "your-service-role-key" 
 SUPABASE_JWT_SECRET         = "your-jwt-secret"
 REACT_APP_URL               = "http://localhost:3000"
 SUPABASE_CHAT_HISTORY_TABLE = "chat_history"
 ```
 
-### Where to Find Each Key
+---
 
-| Key | Where to find it |
-|---|---|
-| `REACT_APP_SUPABASE_URL` | Supabase Dashboard → Project Settings → API → **Project URL** |
-| `REACT_APP_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API → **anon / public** |
-| `SUPABASE_KEY` | Supabase Dashboard → Project Settings → API → **service_role / secret** |
-| `SUPABASE_JWT_SECRET` | Supabase Dashboard → Project Settings → API → **JWT Secret** |
-| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) → API Keys → Create |
+## 🗄️ Supabase Database Setup
 
-> 🔐 **`SUPABASE_KEY` is the service role key** — it has full admin access to your
-> database and bypasses all Row Level Security. It is safe to use here because
-> Streamlit runs as a trusted server process and never exposes this key to the
-> browser. The React frontend uses only the `anon` key.
+You must set up the following tables in your Supabase SQL Editor. *(See full queries in original docs if needed)*.
+*   `users` - Stores public profile data.
+*   `chat_history` - Stores every message across all conversations.
+*   `quiz_results` - Stores best quiz score per user per domain.
+*   `completed_topics` - Tracks learning path completions.
+
+*Note: Streamlit connects using the **service role key** and filters queries server-side, bypassing RLS safely.*
 
 ---
 
-## Supabase Database Setup
+## 🔒 Security & Defenses
 
-Open your Supabase project → **SQL Editor** → paste and run each block below.
-
-### `users` table
-
-Stores public profile data for each registered user.
-
-```sql
-create table users (
-  id         uuid        primary key default gen_random_uuid(),
-  email      text        unique not null,
-  full_name  text,
-  username   text,
-  created_at timestamptz default now()
-);
-
--- Enable Row Level Security
-alter table users enable row level security;
-
--- Users can only read, insert, and update their own row
-create policy "Users can read own row"
-  on users for select
-  using (auth.uid() = id);
-
-create policy "Users can insert own row"
-  on users for insert
-  with check (auth.uid() = id);
-
-create policy "Users can update own row"
-  on users for update
-  using (auth.uid() = id);
-```
-
-### `chat_history` table
-
-Stores every message (user and AI) across all conversations.
-
-```sql
-create table chat_history (
-  id              uuid        primary key default gen_random_uuid(),
-  user_id         text        not null,      -- stores the user's email address
-  conversation_id text        not null,      -- UUID grouping messages into threads
-  title           text,                      -- AI-generated conversation title
-  sender          text        not null,      -- 'user' or 'ai'
-  message         text        not null,
-  created_at      timestamptz default now()
-);
-
--- Enable Row Level Security
-alter table chat_history enable row level security;
-
--- Users can only access their own messages
-create policy "Users see own messages"
-  on chat_history for select
-  using (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users insert own messages"
-  on chat_history for insert
-  with check (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users update own messages"
-  on chat_history for update
-  using (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users delete own messages"
-  on chat_history for delete
-  using (user_id = (auth.jwt() ->> 'email'));
-```
-
-### `quiz_results` table
-
-Stores best quiz score per user per domain.
-
-```sql
-create table quiz_results (
-  id         uuid        primary key default gen_random_uuid(),
-  user_id    text        not null,
-  domain     text        not null,
-  score      integer     not null,
-  total      integer     not null default 5,
-  created_at timestamptz default now()
-);
-
-alter table quiz_results enable row level security;
-
-create policy "Users see own quiz results"
-  on quiz_results for select
-  using (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users insert own quiz results"
-  on quiz_results for insert
-  with check (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users delete own quiz results"
-  on quiz_results for delete
-  using (user_id = (auth.jwt() ->> 'email'));
-```
-
-### `completed_topics` table
-
-Tracks learning path topic completions.
-
-```sql
-create table completed_topics (
-  id           uuid        primary key default gen_random_uuid(),
-  user_id      text        not null,
-  domain       text        not null,
-  topic_id     text        not null,
-  completed_at timestamptz default now(),
-  unique(user_id, topic_id)
-);
-
-alter table completed_topics enable row level security;
-
-create policy "Users see own completions"
-  on completed_topics for select
-  using (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users insert own completions"
-  on completed_topics for insert
-  with check (user_id = (auth.jwt() ->> 'email'));
-
-create policy "Users delete own completions"
-  on completed_topics for delete
-  using (user_id = (auth.jwt() ->> 'email'));
-```
-
-### A note on RLS and the service role key
-
-The Streamlit backend connects using the **service role key**, which bypasses RLS entirely. This is intentional — the backend is a trusted server process that already enforces data isolation by filtering every query with `&user_id=eq.{email}` before it hits the database.
-
-The RLS policies above are still worth creating as a **defence-in-depth** measure. They protect your data if:
-- You ever accidentally use the `anon` key on the backend
-- You add a client-side feature that queries Supabase directly
-- A misconfiguration exposes direct database access
-
-> **Why `(auth.jwt() ->> 'email')` instead of `auth.email()`?**
-> The `auth.email()` helper function does not exist in all Supabase
-> environments and will throw an SQL syntax error on standard projects.
-> The JWT extraction syntax `(auth.jwt() ->> 'email')` works universally.
+*   **Input Sanitization:** All user inputs are sanitized with `sanitize_input()` to remove common injection patterns.
+*   **Safe Agent Tooling:** The agent only supports a single safe tool (`search_docs`) which is read-only. No arbitrary code execution.
+*   **HTML Escaping:** User content is HTML-escaped in the UI.
+*   **JWT Verification:** PyJWT verifies signatures; invalid tokens are rejected. No plain-text email bypass.
 
 ---
 
-## Running the App
+## 👁️‍🗨️ Langfuse Prompt Tracing (Optional)
 
-### Option 1 — PowerShell script (Windows, recommended)
+Langfuse integration is built-in. To enable, add these to your `.streamlit/secrets.toml`:
 
-Launches both services in separate terminal windows:
-
-```powershell
-.\start-dev.ps1
+```toml
+LANGFUSE_PUBLIC_KEY="pk-lf-..."
+LANGFUSE_SECRET_KEY="sk-lf-..."
+LANGFUSE_HOST="https://cloud.langfuse.com"
 ```
 
-Or via the batch file wrapper:
-
-```bat
-start-dev.bat
-```
-
-### Option 2 — Manual (any OS)
-
-Open two terminals:
-
-**Terminal 1 — Streamlit backend:**
-```bash
-python -m streamlit run streamlit/app.py
-# Running at http://localhost:8501
-```
-
-**Terminal 2 — React frontend:**
-```bash
-cd react-app
-npm start
-# Running at http://localhost:3000
-```
-
-### Then open your browser
-
-Navigate to **http://localhost:3000** — always start from the React login page, not Streamlit directly. The auth token is passed from React to Streamlit on login; opening Streamlit directly will show an "Access Denied" screen.
+*Traces base chat requests, agent passes, and tool calls (`tool:search_docs`).*
 
 ---
 
-## Features
+## 🧪 Testing Checklist
 
-### Authentication
-- ✅ Email + password signup with full client-side validation
-- ✅ Password strength enforcement (8+ chars, uppercase, digit, special character)
-- ✅ Username format enforcement (3–30 chars, alphanumeric + underscore)
-- ✅ Confirm password matching on signup
-- ✅ Email confirmation flow (shows "check your inbox" screen when enabled in Supabase)
-- ✅ Password reset flow ("Forgot password?" link on login page)
-- ✅ Button disabled + spinner during API calls — no double-submits
-- ✅ Inline per-field error messages
-- ✅ JWT passed securely via query param — no plain-text email bypass
-- ✅ Server-side JWT signature verification via PyJWT (fails closed — no fallback decode)
-- ✅ Automatic session expiry when JWT expires
-
-### Chat Dashboard
-- ✅ Six security domains: General Security, Network Security, Web App Security, Cloud Security, Cryptography, Incident Response
-- ✅ Streaming AI responses — text appears token-by-token as Groq generates it
-- ✅ Stop generation button — cancel long responses mid-stream
-- ✅ Persistent conversation history stored in Supabase
-- ✅ AI-generated conversation titles (extracted inline from response — no extra API call)
-- ✅ Domain-specific suggested starter questions (shown on empty chat)
-- ✅ Conversation search — filter sidebar by title
-- ✅ Context truncation warning when conversation exceeds 20 messages
-- ✅ Structured AI output format (Answer / Example / Think About This)
-- ✅ 2-second rate limit between messages
-- ✅ Export any conversation to `.md` file
-- ✅ Delete individual conversations
-- ✅ Visible DB error banners — errors are never silently swallowed
-- ✅ Session stats (elapsed time, message count) in sidebar
-
-### Multi-Model Selector
-- ✅ Choose between three Groq models in the sidebar:
-  - **Llama 3.3 70B** — Most capable, best for complex topics (default)
-  - **Llama 3.1 8B** — Fast, good for quick questions
-  - **Mixtral 8x7B** — Balanced, 32K context window
-- ✅ Model selection persists across messages within a session
-
-### 🧪 Hands-On Lab Mode
-- ✅ Toggle Lab Mode in the sidebar to switch from Q&A to hands-on security challenges
-- ✅ The AI presents realistic vulnerable code, configs, or logs and asks you to identify, exploit, and remediate the issue
-- ✅ Six domain-specific lab scenarios (OWASP code review, IAM policy audit, firewall config analysis, incident log forensics, crypto implementation review, and general misconfig hunting)
-- ✅ The AI evaluates your response and provides hints if incorrect — never reveals the answer upfront
-- ✅ Lab-specific suggested challenges shown on empty chat
-- ✅ Visual `🧪 Lab` chip badge in the header when active
-
-### 📝 Skill Assessment Quiz
-- ✅ 30 verified cybersecurity questions (5 per domain) with explanations
-- ✅ Multiple-choice format with instant grading
-- ✅ Score card with percentage and grade (Excellent / Good / Needs Practice)
-- ✅ Per-question feedback showing correct answers and explanations for wrong answers
-- ✅ Best scores saved to Supabase — retake quizzes to improve
-
-### 📊 Progress Dashboard
-- ✅ Quiz score progress bars for all 6 domains
-- ✅ 30 structured learning path topics (5 per domain) with Learn and Practice actions
-- ✅ Topic completion tracking with undo support
-- ✅ Activity summary stats (conversations, messages, quizzes, topics)
-- ✅ Learn button starts a guided chat; Practice button opens a lab challenge
-
-### Code Quality
-- ✅ `app.py` split into six focused modules (`auth`, `db`, `chat`, `config`, `quiz`, `progress`)
-- ✅ Dashboard CSS extracted to external file (`dashboard.css`)
-- ✅ Unified design token palette between React auth and Streamlit dashboard
-- ✅ Startup config validation — clear error message if any secret is missing
-- ✅ Type annotations throughout Python codebase
-- ✅ Official `@supabase/supabase-js` SDK in React (replaces ~150 lines of manual `fetch`)
+- [ ] Install dependencies and run the app locally.
+- [ ] Enable RAG (Sidebar > Advanced Settings) and upload sample docs (`.txt` or `.md`).
+- [ ] Query content in uploaded docs and confirm grounded passages appear in the context.
+- [ ] Enable agent mode, instruct the assistant to call `search_docs`, and confirm it returns a grounded final answer.
 
 ---
 
-## Security Notes
+## 📦 Deliverables & Next Steps
 
-| Risk | Mitigation |
-|---|---|
-| Forged JWT tokens | PyJWT verifies signature using `SUPABASE_JWT_SECRET` — invalid tokens are rejected |
-| Plain-text email auth bypass | Removed — only signed JWTs are accepted |
-| JWT signature bypass (dev fallback) | Removed — auth fails closed if PyJWT or the secret is unavailable |
-| Expired JWT sessions | JWT `exp` claim re-checked on every page load; expired sessions redirect to login |
-| Weak passwords | Requires 8+ chars with uppercase, digit, and special character |
-| Cross-user data access | Server-side `user_id` filter on every query + RLS policies as backup |
-| Service role key exposure | Lives only in `.streamlit/secrets.toml` — gitignored, never sent to browser |
-| Double form submission | Submit button disabled during in-flight API calls |
-| Message flooding | 2-second cooldown enforced in session state |
+### Required Deliverables:
+1.  **Presentation Slides:** Use `PRESENTATION_SLIDES.md` or request automated generation.
+2.  **Public GitHub Repo:** Push workspace to a public repository.
+3.  **App Deployment:** Deploy on Streamlit Cloud and include the link.
+
+### Optional Next Steps (I can help with):
+-   Run automated unit smoke tests.
+-   Configure Langfuse integrations fully.
+-   Create a `.pptx` slide deck programmatically (requires `python-pptx`).
 
 ---
 
-## Known Gotchas
+## 💡 Known Gotchas
 
-**"Check your email" screen appears on signup even locally**
-This means Supabase has "Confirm email" enabled. Either disable it in Supabase → Authentication → Providers → Email → toggle off "Confirm email" for local dev, or just confirm the email and then sign in normally.
-
-**Streamlit shows "Access Denied"**
-You navigated directly to `http://localhost:8501` without going through the React login first. Always start at `http://localhost:3000`.
-
-**`SUPABASE_JWT_SECRET` — where exactly is it?**
-Supabase Dashboard → Project Settings → API → scroll to the bottom → **JWT Settings** → copy the secret. It is not the same as your API keys.
-
-**Groq API quota errors**
-The free tier of Groq has per-minute rate limits. If you hit them, wait 60 seconds and try again. For production use, upgrade your Groq plan.
-
-**Conversation titles show raw message text instead of an AI title**
-Title generation is async and fires after the first exchange. If the LLM is slow or rate-limited, the title falls back to the first 40 characters of your opening message — this is expected behaviour.
+*   **"Check your email" on local signup:** Disable "Confirm email" in Supabase Auth settings for local dev.
+*   **Streamlit "Access Denied":** Always start at the React app (`localhost:3000`), not Streamlit.
+*   **Groq API limits:** Free tier has strict per-minute rate limits.
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
-- [x] Password reset flow (`supabase.auth.resetPasswordForEmail`)
-- [x] Multi-model selector (Llama 3.3 70B, Llama 3.1 8B, Mixtral 8x7B)
-- [x] Hands-on lab mode — AI presents vulnerable code for user to identify and fix
-- [ ] User profile page (update display name, username)
-- [ ] Per-domain progress tracking (messages sent, topics covered)
-- [ ] Quiz mode — AI generates multiple-choice questions to test retention
-- [ ] Difficulty selector (Beginner / Intermediate / Advanced) adjusts system prompt
-- [ ] Admin dashboard — user counts, active sessions, error logs
-- [ ] Full React SPA — replace Streamlit chat with a React chat component for better mobile support
-- [ ] Dedicated `conversations` table — cleaner than parsing `chat_history` rows for summaries
+- [x] Hands-on lab mode
+- [x] Multi-model selector
+- [ ] User profile page
+- [ ] Difficulty selector adjusts system prompt
+- [ ] Admin dashboard
 
 ---
 
 <div align="center">
-<sub>Built with React, Streamlit, Supabase, and Llama 3.3 70B via Groq</sub>
+
+**Built with React, Streamlit, Supabase, and Llama 3.3 70B via Groq**
+
 </div>
